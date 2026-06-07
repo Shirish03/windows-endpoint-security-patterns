@@ -16,8 +16,8 @@
       <Enabled>true</Enabled>
       <Subscription>
         &lt;QueryList&gt;
-          &lt;Query Id="0" Path="Microsoft-Windows-BitLocker/BitLocker Management"&gt;
-            &lt;Select Path="Microsoft-Windows-BitLocker/BitLocker Management"&gt;
+          &lt;Query Id="0" Path="Microsoft-Windows-BitLocker-API/Management"&gt;
+            &lt;Select Path="Microsoft-Windows-BitLocker-API/Management"&gt;
               *[System[
                 Provider[@Name='Microsoft-Windows-BitLocker-API']
                 and EventID=846
@@ -55,7 +55,7 @@
     <Hidden>false</Hidden>
     <RunOnlyIfIdle>false</RunOnlyIfIdle>
     <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>PT72H</ExecutionTimeLimit>
+    <ExecutionTimeLimit>PT5M</ExecutionTimeLimit>
     <Priority>7</Priority>
   </Settings>
 
