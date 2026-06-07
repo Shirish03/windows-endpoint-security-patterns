@@ -1,5 +1,4 @@
 # Serverless Windows Provisioning with WICD
-## A Practical Reference for Serverless Windows Provisioning
 
 This project documents a **serverless Windows provisioning pattern** built using **Windows Imaging and Configuration Designer (WICD)**. It is intended for scenarios where full cloud-based provisioning (like Autopilot) is unnecessary, unavailable, or excessive.
 
@@ -58,6 +57,33 @@ This solution is ideal for scenarios such as:
 - Transitional scenarios before adopting modern cloud platforms like Autopilot  
 
 > For fully cloud-managed deployments (AAD + Intune), Autopilot remains the preferred approach. WICD still provides value for offline or constrained setups, or when bulk provisioning without backend services is desired.
+
+---
+
+## When to Use This Pattern
+
+```mermaid
+flowchart TB
+    A["New Windows device\nneeds provisioning"]
+    B{"Hardware hash\nenrolled in Autopilot?"}
+    C["🏆 Use Windows Autopilot\nFull cloud-native flow\nIntune-managed from day one"]
+    D{"Stable internet\nat deployment site?"}
+    E["✅ This pattern applies\nServerless WICD provisioning\nNo infrastructure required"]
+    F{"On-premises AD\nand SCCM available?"}
+    G["🏢 Use traditional imaging\nPXE / task sequence\nOn-premises domain join"]
+    H{"Intune enrollment\nwithout Autopilot feasible?"}
+    I["☁ Use Intune enrollment\nCloud join without\nAutopilot hardware hash"]
+
+    A --> B
+    B -->|Yes| C
+    B -->|No| D
+    D -->|"No — SMB / offline / lab"| E
+    D -->|Yes| F
+    F -->|Yes| G
+    F -->|No| H
+    H -->|Yes| I
+    H -->|No| E
+```
 
 ---
 

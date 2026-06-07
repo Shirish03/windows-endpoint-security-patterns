@@ -82,26 +82,37 @@ actions including security and application deployment.
 
 ```mermaid
 flowchart TB
-    A[1. User boots device from prepared media and installs Windows]
+    A["Admin prepares provisioning\npackage in Windows ICD"]
 
-    subgraph WICD[WICD Provisioning]
-        B[2. Provisioning package applied]
-        C[3. Optional Entra ID join completed by user]
+    subgraph PPKG["Provisioning package — .ppkg contents"]
+        P1["Security baseline\nBitLocker + hardening"]
+        P2["Identity config\nOptional Entra ID join"]
+        P3["Application install\nOffice, VPN, printers"]
+        P4["Network profiles\nWi-Fi, proxy settings"]
     end
 
-    subgraph SecurityApps[Security & Application Setup]
-        D[4. Apply security controls: BitLocker, VPN, compliance settings]
-        E[5. Deploy applications: Office 365, printers, custom scripts]
+    B["User boots from\nprepared USB media"]
+
+    subgraph OOBE["Device setup at OOBE"]
+        C["Apply .ppkg at\nOOBE setup screen"]
+        D["Optional: complete\nEntra ID join flow"]
+        C --> D
     end
 
-    F[6. Device ready for operational use]
+    subgraph POST["Post-provisioning state — approx. 11 minutes"]
+        E["BitLocker enabled\nrecovery key escrowed to Entra ID"]
+        F["Security baseline applied automatically\nno manual steps"]
+        G["Applications installed\nnetwork profiles configured"]
+        E --> F --> G
+    end
 
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
+    H["✅ Device compliant and operational\nNo deployment server\nNo imaging pipeline\nNo long-running agents"]
 
+    A --> PPKG
+    PPKG --> B
+    B --> OOBE
+    OOBE --> POST
+    POST --> H
 ```
 ## Use Cases / Scenarios
 

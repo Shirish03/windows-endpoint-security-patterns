@@ -42,27 +42,53 @@ recovery key escrow.
 
 ```mermaid
 flowchart TB
-    A[User enables BitLocker on USB drive]
-    B[Windows logs Event ID 846]
-    C[Event-triggered Scheduled Task]
-    D[PowerShell Escrow Script]
-    E[manage-bde / Get-BitLockerVolume]
-    F[Recovery Key backed up to Entra ID]
+    classDef success fill:#d4edda,stroke:#28a745,color:#155724
+    classDef failure fill:#f8d7da,stroke:#dc3545,color:#721c24
+    classDef warning fill:#fff3cd,stroke:#ffc107,color:#856404
+
+    A["User enables BitLocker\non removable USB drive"]
+    B["Windows attempts recovery\nkey backup to Entra ID"]
+    C["✅ Key escrowed\nEvent ID 845 logged"]:::success
+    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker-API/Management\nLevel 3 — Warning"]
+    E["Event-triggered scheduled task\nfires within 30 seconds\nSYSTEM context"]
+    F["BTG_RecoveryKey_Escrow_Retry.ps1\nexecutes as SYSTEM"]
+    G{"BackupToAAD cmdlet\navailable on device?"}
+    H["❌ Exit 1\nDevice lacks required module\nLogged to ProgramData"]:::failure
+    I{"Event age\n≤ 10 minutes?"}
+    J["⏭ Exit 0\nStale event logged\nNo action taken"]
+    K["Extract drive letter from event message\nRegex: volume\\s+[A-Z]:"]
+    L{"Drive letter\nextracted?"}
+    M["❌ Log parse failure\nRaw message captured\nfor diagnostics"]:::warning
+    N["Get-BitLockerVolume\nFind RecoveryPassword\nprotectors on volume"]
+    O{"RecoveryPassword\nprotectors found?"}
+    P["❌ Exit 1\nNo protectors on volume\nLogged"]:::failure
+    Q["For each protector\nNormalise GUID format\nAttempt BackupToAAD"]
+    R{"Escrow\nresult?"}
+    S["✅ Exit 0\nKey escrowed to Entra ID\nTimestamp logged"]:::success
+    T["⚠ Log exception\nContinue to next\nprotector if any"]:::warning
 
     A --> B
-    B --> C
-    C --> D
+    B -->|Success| C
+    B -->|Failure| D
     D --> E
     E --> F
+    F --> G
+    G -->|No| H
+    G -->|Yes| I
+    I -->|Stale — skip| J
+    I -->|Recent — proceed| K
+    K --> L
+    L -->|No match| M
+    L -->|Matched| N
+    N --> O
+    O -->|None| P
+    O -->|Found| Q
+    Q --> R
+    R -->|Success| S
+    R -->|Exception| T
 ```
 
-1. User enables BitLocker on a USB drive
-2. Windows logs Event ID 846 indicating recovery key backup failure
-3. An event-triggered scheduled task is invoked
-4. PowerShell script parses the event data
-5. The removable drive letter is extracted
-6. Recovery key information is retrieved using `manage-bde`
-7. Recovery key is backed up to Entra ID
+> Color guide: green nodes = success paths, red = terminal failures, amber = logged errors with continuation.
 
 ---
 

@@ -41,33 +41,32 @@ This pattern leverages Sysmon's registry-backed configuration mechanism and nati
 
 ### Approach Steps
 
-```text
-       +---------------------------+
-       | Validated Sysmon XML      |
-       | configuration imported on |
-       | reference system          |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Registry value extracted  |
-       | from:                     |
-       | HKLM\SYSTEM\...\Rules     |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Policy object created     |
-       | with binary registry      |
-       | value (GPO / Policy)      |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Target systems receive    |
-       | configuration via policy  |
-       | refresh cycles            |
-       +---------------------------+
+```mermaid
+flowchart TB
+    subgraph S1["① Reference system"]
+        A["Validated Sysmon\nXML config file"]
+        B["sysmon.exe -c config.xml\nConfiguration imported"]
+        A --> B
+    end
+
+    subgraph S2["② Registry extraction"]
+        C["HKLM\\SYSTEM\\CurrentControlSet\nServices\\SysmonDrv\\Parameters\nRules  —  REG_BINARY\nextracted as deployment artifact"]
+    end
+
+    subgraph S3["③ Policy distribution"]
+        D["Group Policy Object\nor Intune Policy CSP\nRegistry preference targeting\nSysmonDrv\\Rules\nNo agents required"]
+    end
+
+    subgraph S4["④ Target endpoints"]
+        E["Standard policy refresh cycle\nNo manual steps"]
+        F["Registry value applied to endpoint"]
+        G["Sysmon reads updated configuration\nat runtime  —  binary unchanged"]
+        E --> F --> G
+    end
+
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
 ```
 
 **Step Details:**
