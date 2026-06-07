@@ -30,9 +30,9 @@ without confirming first.
 - [x] All pattern diagrams updated to Mermaid
 - [x] Pattern 03 README duplicate H1 removed
 - [x] Decision matrix added to Pattern 03 README
+- [x] Pester 5 test suite for BTG escrow retry script
 
 ## Pending
-- [ ] Pester 5 test file for BTG scripts
 - [ ] CHANGELOG.md
 - [ ] CONTRIBUTING.md
 - [ ] docs/why-patterns-not-scripts.md (engineering philosophy essay)
