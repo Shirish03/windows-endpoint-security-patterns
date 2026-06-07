@@ -10,7 +10,7 @@ This repository is structured differently, and that choice is intentional.
 ## The real problem with scripts as the unit of sharing
 
 A script encodes a decision, but it doesn't explain it. It tells you *what* was
-done. It doesn't tell you *why that approach was chosen*, what platform behaviour
+done. It doesn't tell you *why that approach was chosen*, what platform behavior
 it depends on, or what will silently break if one of those dependencies isn't
 present.
 
@@ -83,7 +83,7 @@ preserved. The person making the change understands what they're trying to
 preserve, not just what they're trying to fix.
 
 This matters in endpoint security specifically because the platform — Windows,
-Intune, Entra ID — is not static. Behaviour that is undocumented today gets
+Intune, Entra ID — is not static. Behavior that is undocumented today gets
 documented, sometimes as a fix and sometimes as a breaking change. Patterns give
 you the context to evaluate those changes. Scripts just break.
 
