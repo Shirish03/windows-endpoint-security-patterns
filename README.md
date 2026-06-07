@@ -32,7 +32,7 @@ and where the answer to a security gap is not always "wait for a platform update
 |---|---------|----------------|-------------|
 | 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
-| 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | SMB / Offline / Labs |
+| 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
 
 ## Engineering Philosophy
 
@@ -71,6 +71,7 @@ Each pattern lives in its own folder under `patterns/` and is self-contained:
 - **docs/** — detailed architecture and design documentation
 - **scripts/** — PowerShell implementation where applicable
 - **examples/** — sanitized samples and illustrative output where applicable
+- **tests/** — Pester unit tests where applicable
 
 Start with the pattern README to understand the design context before reading
 the scripts. Each implementation will require adaptation — environment-specific

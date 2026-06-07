@@ -25,13 +25,14 @@ Open an issue describing:
 - The environment it applies to (OS version, management platform)
 - Whether you have validated the approach, and in what context
 
-Pattern suggestions without a clear problem statement will not be prioritised.
+Pattern suggestions without a clear problem statement will not be prioritized.
 
 ## Code standards for script contributions
 
 - `[CmdletBinding()]` on all scripts
 - Structured logging to a consistent path — no `Write-Host` as the sole output
 - `exit 0` / `exit 1` instead of bare `return` at script scope
+- `try/catch/finally` wrapping all execution paths
 - PSScriptAnalyzer clean at Error severity
 - No hardcoded tenant identifiers, device names, or environment-specific paths
 - Pester 5 test file covering the main execution paths

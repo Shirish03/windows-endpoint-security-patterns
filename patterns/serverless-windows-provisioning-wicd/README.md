@@ -77,7 +77,7 @@ flowchart TB
     A --> B
     B -->|Yes| C
     B -->|No| D
-    D -->|"No — SMB / offline / lab"| E
+    D -->|"No — offline / lab"| E
     D -->|Yes| F
     F -->|Yes| G
     F -->|No| H
@@ -94,3 +94,15 @@ flowchart TB
 - Scripts operate within Windows security boundaries  
 - **No secrets or credentials** are embedded in artifacts  
 - Provisioning is treated as a **security control**, not just a setup task  
+
+---
+
+## Disclaimer
+
+This pattern is provided as reference material and design guidance. It has been
+validated in offline and infrastructure-light lab scenarios on Windows 10 22H2
+and Windows 11. Provisioning package behavior may vary depending on Windows ADK
+version, hardware configuration, and target OS build.
+
+Validate all provisioning packages in a controlled test environment before
+deploying to production devices.
