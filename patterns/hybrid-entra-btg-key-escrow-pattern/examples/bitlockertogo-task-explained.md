@@ -10,7 +10,7 @@ These files are provided for structural and educational purposes only.
 
 **File:** `BitLockerToGo-Escrow-Retry.sample.xml`
 
-This XML represents a simplified scheduled task definition
+This XML is an annotated example of a scheduled task definition
 configured to trigger on a BitLocker API failure event.
 
 ### Key Characteristics

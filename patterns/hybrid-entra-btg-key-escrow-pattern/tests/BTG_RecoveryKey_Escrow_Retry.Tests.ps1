@@ -140,13 +140,13 @@ Describe 'BTG_RecoveryKey_Escrow_Retry.ps1' {
     # ------------------------------------------------------------------
     Describe 'Recency guard: boundary conditions' {
 
-        Context 'When the event is exactly 10 minutes old' {
+        Context 'When the event is more than 10 minutes old' {
 
             BeforeEach {
                 Mock Get-WinEvent {
                     [PSCustomObject]@{
                         Id          = 846
-                        TimeCreated = (Get-Date).AddMinutes(-10)
+                        TimeCreated = (Get-Date).AddMinutes(-11)
                         Message     = 'Failed to backup BitLocker Drive Encryption recovery information for volume E: to your Azure AD.'
                     }
                 }
