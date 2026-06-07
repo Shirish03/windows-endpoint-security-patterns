@@ -1,84 +1,25 @@
-# Serverless Windows Provisioning Using Windows Imaging and Configuration Designer (WICD)
-## A Formal Technical White Paper
+# Serverless Windows Provisioning – WICD Approach
+
+## Context
+
+Windows provisioning is typically framed as a binary choice: traditional imaging
+infrastructure (Active Directory, SCCM, PXE boot) or fully cloud-native provisioning
+(Autopilot, Intune). Many environments fall between those options — small offices,
+training labs, transitional scenarios, or deployments where the cost of adding
+backend infrastructure exceeds the value it provides.
+
+This pattern documents a third path: provisioning Windows 10/11 devices securely
+and repeatably using only native Windows tooling, with no deployment servers,
+imaging pipelines, or long-running agents.
+
+The mechanism is a provisioning package (`.ppkg`) built with Windows Imaging and
+Configuration Designer (WICD). The package encodes security baseline, identity
+configuration, and application install logic and applies it at OOBE. Devices
+reach a compliant, usable state within approximately 11 minutes of first boot.
 
 ---
 
-## Abstract
-
-This document describes a **serverless approach** to provisioning Windows 10 and Windows 11 devices using Windows Imaging and Configuration Designer (WICD).  
-The architecture is intended for environments where traditional deployment infrastructure is unavailable, undesirable, or intentionally avoided.
-
-The solution enables:
-
-- Out-of-box device provisioning
-- Entra ID (Azure AD) enrollment (optional)
-- Security baseline configuration
-- Application deployment using native Windows tooling
-
-All without reliance on on‑premises servers or modern cloud provisioning services.
-
----
-
-## Motivation and Context
-
-Modern endpoint provisioning typically assumes either:
-
-1. Full infrastructure: Active Directory, SCCM, PXE, imaging pipelines  
-2. Fully cloud-based solutions: Windows Autopilot / Intune
-
-However, many organizations fall **between these extremes** or deliberately operate in minimal-infrastructure environments:
-
-- Small offices or training labs with 5–20 workstations
-- Temporary or shared computer labs
-- Scenarios requiring **offline deployment**
-- Situations where cost or infrastructure constraints prevent server-based deployment
-
-This serverless approach enables organizations to prepare devices securely and consistently, **without extra infrastructure**, while maintaining a modern security posture.
-
----
-
-## Problem Statement
-
-Challenges addressed by this architecture:
-
-- Absence of deployment infrastructure
-- Limited network connectivity during provisioning
-- Transitional stages of cloud adoption
-- Security policies restricting standing server components
-
-Conventional imaging or cloud-native solutions may not be feasible in these scenarios. This architecture bridges that gap.
-
----
-
-## Design Goals
-
-- **Serverless by design:** No deployment servers or databases  
-- **Native tooling only:** Leverage Windows built-in capabilities  
-- **Repeatable provisioning:** Deterministic outcomes across devices  
-- **Security-first configuration:** Encryption, identity, and compliance applied early  
-- **Minimal operational dependency:** Users self-provision safely, guided by clear instructions  
-
----
-
-## Solution Overview
-
-The architecture uses:
-
-- Windows Imaging and Configuration Designer (WICD)  
-- Provisioning packages (`.ppkg`)  
-- Bootable installation media (USB/DVD)  
-- Native Windows enrollment and management mechanisms  
-
-All configuration logic applies **during provisioning**, so devices reach a secure, manageable state **immediately after first sign-in**.
-
----
-
-# Windows Provisioning Flow – Serverless WICD Approach
-
-This diagram illustrates the high-level provisioning flow for Windows 10/11 devices
-using a serverless Windows Imaging and Configuration Designer (WICD) approach.
-It highlights the steps managed by the WICD provisioning package and post-provisioning
-actions including security and application deployment.
+## Provisioning Flow
 
 ```mermaid
 flowchart TB
@@ -114,53 +55,51 @@ flowchart TB
     OOBE --> POST
     POST --> H
 ```
-## Use Cases / Scenarios
-
-### Small Office Deployment
-- 5–20 workstations
-- Devices can remain Workgroup joined or optionally join to Active Directory Domain or Entra ID (Azure AD)
-- Full provisioning and application installation without IT infrastructure
-
-### Training Lab or Temporary Workstations
-- Devices reused for courses or workshops
-- Rapid provisioning with security controls and baseline apps
-- No dependency on AD, SCCM, or cloud enrollment
-
-### Hybrid / Transitional Environments
-- Devices can later integrate into cloud management (Autopilot, Intune)
-- Optional bulk Entra ID join using WICD provisioning package
 
 ---
 
-## Security Considerations
-- **Encryption:** BitLocker enabled automatically; recovery key escrowed to Entra ID  
-- **Credential Handling:** No secrets embedded in provisioning artifacts  
-- **Platform Trust:** Relies solely on native Windows security boundaries  
-- **Auditability:** Logs and provisioning artifacts can be inspected  
+## Where This Applies
+
+**Small offices and labs (5–20 workstations)**  
+Full provisioning and application installation without IT infrastructure. Devices
+can remain Workgroup joined or optionally join Entra ID.
+
+**Training environments and temporary workstations**  
+Rapid reprovisioning with consistent security controls and baseline applications
+between cohorts. No dependency on AD, SCCM, or cloud enrollment.
+
+**Transitional environments**  
+Devices provisioned this way can later integrate into cloud management (Autopilot,
+Intune). Entra ID join via WICD is optional but supported.
+
+---
+
+## Security Characteristics
+
+- BitLocker enabled during provisioning; recovery key escrowed to Entra ID
+- No secrets or credentials embedded in provisioning artifacts
+- All configuration applies through native Windows security boundaries
+- Post-provisioning state is auditable from logs and provisioning artifacts
 
 ---
 
 ## Operational Notes
-- Approximate provisioning time: ~11 minutes per device  
-- Users follow guided steps for booting media and completing optional Entra ID join  
-- Post-provisioning validation recommended: verify security settings, application installation, and network access  
+
+- Approximate provisioning time: ~11 minutes per device
+- Users follow guided steps for booting from prepared USB media and completing
+  optional Entra ID join
+- Post-provisioning validation recommended: confirm security settings, application
+  installation, and network access before handing off the device
 
 ---
 
-## Limitations
-- This architecture is **not a replacement** for Autopilot or full Intune enrollment  
-- Network-dependent features (cloud profiles, Intune policies) require additional configuration  
-- Designed for **small-scale, infrastructure-light deployments**  
+## Where This Doesn't Apply
 
----
+This pattern is not a replacement for Autopilot or full Intune enrollment. If
+devices have hardware hashes enrolled and reliable internet connectivity at
+deployment time, Autopilot is the better path. This pattern is for deployments
+where those prerequisites don't exist.
 
-## References
-- [Windows Imaging and Configuration Designer Documentation](https://docs.microsoft.com/en-us/windows/configuration/provisioning-packages/provisioning-tool-overview)  
-- [Microsoft BitLocker Guidance](https://docs.microsoft.com/en-us/windows/security/information-protection/bitlocker/bitlocker-overview)  
-
----
-
-## Conclusion
-This reference architecture demonstrates that **secure, consistent, and serverless provisioning of Windows 10/11 devices** is achievable without traditional deployment infrastructure.  
-
-By leveraging **native Windows capabilities and observable platform behavior**, organizations can bridge modernization gaps safely and cost-effectively, while maintaining a strong security posture.
+Network-dependent features — cloud profile delivery, Intune baseline policies —
+require additional configuration and connectivity after provisioning. This pattern
+gets the device to a secure baseline; it does not substitute for a management plane.
