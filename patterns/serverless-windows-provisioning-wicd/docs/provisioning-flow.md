@@ -1,21 +1,10 @@
 # Serverless Windows Provisioning – WICD Approach
 
-## Context
+For background on the pattern, the problem it addresses, and when to use it,
+see the [pattern README](../README.md).
 
-Windows provisioning is typically framed as a binary choice: traditional imaging
-infrastructure (Active Directory, SCCM, PXE boot) or fully cloud-native provisioning
-(Autopilot, Intune). Many environments fall between those options — small offices,
-training labs, transitional scenarios, or deployments where the cost of adding
-backend infrastructure exceeds the value it provides.
-
-This pattern documents a third path: provisioning Windows 10/11 devices securely
-and repeatably using only native Windows tooling, with no deployment servers,
-imaging pipelines, or long-running agents.
-
-The mechanism is a provisioning package (`.ppkg`) built with Windows Imaging and
-Configuration Designer (WICD). The package encodes security baseline, identity
-configuration, and application install logic and applies it at OOBE. Devices
-reach a compliant, usable state within approximately 11 minutes of first boot.
+This document covers the provisioning flow in detail, what each component of
+the provisioning package does at runtime, and operational notes.
 
 ---
 
@@ -58,28 +47,34 @@ flowchart TB
 
 ---
 
-## Where This Applies
+## Provisioning Package Contents
 
-**Small offices and labs (5–20 workstations)**  
-Full provisioning and application installation without IT infrastructure. Devices
-can remain Workgroup joined or optionally join Entra ID.
+The `.ppkg` is the core artifact. It is built once in Windows Imaging and
+Configuration Designer (WICD) and reused across devices. The four content
+categories in the diagram correspond to the following runtime behaviors.
 
-**Training environments and temporary workstations**  
-Rapid reprovisioning with consistent security controls and baseline applications
-between cohorts. No dependency on AD, SCCM, or cloud enrollment.
+**Security baseline — BitLocker + hardening**  
+BitLocker encryption is enabled automatically during OOBE. The recovery key
+is escrowed to Entra ID as part of the provisioning sequence, provided the
+device completes the optional Entra ID join step. Security hardening settings
+— password policy, audit policy, Windows Firewall — are applied through the
+provisioning runtime without requiring Group Policy or Intune.
 
-**Transitional environments**  
-Devices provisioned this way can later integrate into cloud management (Autopilot,
-Intune). Entra ID join via WICD is optional but supported.
+**Identity config — Optional Entra ID join**  
+The package can embed a bulk enrollment token, enabling hands-free Entra ID
+join during setup. Alternatively, the user completes the join step manually
+during OOBE. Both paths produce a managed device without requiring IT presence
+at the machine.
 
----
+**Application install — Office, VPN, printers**  
+MSI packages, scripts, and certificate installations are delivered natively
+within the WICD provisioning sequence. Applications are present before the
+user reaches the desktop.
 
-## Security Characteristics
-
-- BitLocker enabled during provisioning; recovery key escrowed to Entra ID
-- No secrets or credentials embedded in provisioning artifacts
-- All configuration applies through native Windows security boundaries
-- Post-provisioning state is auditable from logs and provisioning artifacts
+**Network profiles — Wi-Fi, proxy settings**  
+Wi-Fi credentials and proxy configurations embedded in the package are applied
+during OOBE, ensuring connectivity is available from first sign-in — including
+for the optional Entra ID join step that requires it.
 
 ---
 
@@ -87,8 +82,8 @@ Intune). Entra ID join via WICD is optional but supported.
 
 - Approximate provisioning time: ~11 minutes per device
 - Users follow guided steps for booting from prepared USB media and completing
-  optional Entra ID join
-- Post-provisioning validation recommended: confirm security settings, application
+  the optional Entra ID join
+- Post-provisioning validation recommended: confirm BitLocker status, application
   installation, and network access before handing off the device
 
 ---

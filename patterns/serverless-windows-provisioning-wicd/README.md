@@ -1,35 +1,21 @@
 # Serverless Windows Provisioning with WICD
 
-This project documents a **serverless Windows provisioning pattern** built using **Windows Imaging and Configuration Designer (WICD)**. It is intended for scenarios where full cloud-based provisioning (like Autopilot) is unnecessary, unavailable, or excessive.
+This pattern documents a **serverless Windows provisioning approach** built using **Windows Imaging and Configuration Designer (WICD)**. It is intended for scenarios where full cloud-based provisioning (like Autopilot) is unnecessary, unavailable, or excessive.
 
 The solution enables secure, repeatable provisioning of **Windows 10 and Windows 11 devices** using only native Windows tooling, without deployment servers, imaging infrastructure, or long-running agents.
 
 ---
 
-## Why This Project Exists
+## Background
 
 Provisioning Windows devices is often framed as a binary choice:
 
 1. Traditional imaging infrastructure (servers, AD, SCCM)  
 2. Fully cloud-native provisioning (Autopilot, Intune)
 
-In reality, many environments sit in between, or intentionally avoid adding infrastructure. This pattern demonstrates how to prepare devices **securely and consistently** in such contexts.
+In reality, many environments sit in between, or intentionally avoid adding infrastructure. Conventional provisioning assumes deployment servers, directory services, and persistent management infrastructure — none of which may exist in these scenarios.
 
----
-
-## Core Challenge
-
-Typical provisioning assumes:
-
-- Deployment servers
-- Directory services
-- Persistent management infrastructure
-
-This solution asks a different question:
-
-> **What if none of that exists?**
-
-The goal is to provision devices **quickly, securely, and reliably** using only the platform’s native capabilities.
+This pattern demonstrates how to provision devices **securely and consistently** using only the platform’s native capabilities, without deployment servers, imaging pipelines, or long-running agents.
 
 ---
 
