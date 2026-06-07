@@ -35,7 +35,7 @@ without confirming first.
 ## Pending
 - [x] CHANGELOG.md
 - [x] CONTRIBUTING.md
-- [ ] docs/why-patterns-not-scripts.md (engineering philosophy essay)
+- [x] docs/why-patterns-not-scripts.md (engineering philosophy essay)
 - [ ] Pattern 02: extract PowerShell helper script for registry extraction
 - [ ] GitHub repo topics set (via GitHub UI, not code)
 - [x] README badges (lint status, license)
