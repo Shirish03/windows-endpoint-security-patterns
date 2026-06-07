@@ -81,13 +81,13 @@ flowchart TB
     H --> J
     H --> I
 ```
+
 The diagram above illustrates the event-driven execution flow for BitLocker-to-Go recovery key escrow on Hybrid Entra ID joined devices.
 
 **Key points:**
 
 - The **event-triggered scheduled task** ensures the script runs immediately after a backup failure (Event ID 846).  
 - All control logic after event detection is fully handled by the **PowerShell escrow script**: it parses the event, extracts the target drive, retrieves the recovery key, retries escrow to Entra ID, and logs execution details.  
-- Logging is **first-class**, providing operational visibility, troubleshooting context, and audit evidence without exposing recovery key material.  
 - This approach runs safely and automatically, using only built-in Windows features and the device’s existing trust with Entra ID.  
 - The architecture scales across endpoints and complements native BitLocker behavior without introducing additional agents or infrastructure.
 
@@ -166,6 +166,10 @@ Logs are intended to provide operational visibility, troubleshooting context, an
 
 ## Architectural Takeaway
 
-Endpoint security controls do not always fail loudly or consistently.  
+The design relies entirely on components and trust relationships that already
+exist on the endpoint. No new infrastructure is introduced, no credentials are
+handled, and each execution is bounded by a single discrete failure signal.
 
-By treating BitLocker-to-Go recovery key escrow as a behavioral system and responding reliably to native failure signals, this architecture closes a quiet but operationally significant gap **without introducing new infrastructure or weakening the platform’s security model**.
+That scope is deliberate. A compensating control that operates within the
+platform’s established boundaries — rather than around them — is auditable,
+predictable, and safe to run at scale.

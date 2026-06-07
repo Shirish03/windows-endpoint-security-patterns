@@ -10,7 +10,7 @@ Although Group Policy and Intune CSPs exist to configure recovery
 key backup behavior, Windows 10/11 does not natively and reliably
 escrow **removable drive** recovery keys to Entra ID in this scenario.
 
-This project documents a **design gap** identified during the
+This pattern documents a **design gap** identified during the
 migration of an enterprise endpoint security control, and presents
 a practical, event-driven workaround.
 
@@ -62,7 +62,7 @@ flowchart TB
     N["Get-BitLockerVolume\nFind RecoveryPassword\nprotectors on volume"]
     O{"RecoveryPassword\nprotectors found?"}
     P["❌ Exit 1\nNo protectors on volume\nLogged"]:::failure
-    Q["For each protector\nNormalise GUID format\nAttempt BackupToAAD"]
+    Q["For each protector\nNormalize GUID format\nAttempt BackupToAAD"]
     R{"Escrow\nresult?"}
     S["✅ Exit 0\nKey escrowed to Entra ID\nTimestamp logged"]:::success
     T["⚠ Log exception\nContinue to next\nprotector if any"]:::warning
