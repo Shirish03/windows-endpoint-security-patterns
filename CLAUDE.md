@@ -37,7 +37,7 @@ without confirming first.
 - [x] CONTRIBUTING.md
 - [x] docs/why-patterns-not-scripts.md (engineering philosophy essay)
 - [x] Pattern 02: extract PowerShell helper script for registry extraction
-- [ ] GitHub repo topics set (via GitHub UI, not code)
+- [x] GitHub repo topics set (via GitHub UI, not code)
 - [x] README badges (lint status, license)
 - [x] Sample XML in examples/ populated with real structure
 
