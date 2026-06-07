@@ -127,9 +127,6 @@ flowchart TB
 - **Platform Trust:** Relies solely on native Windows security boundaries  
 - **Auditability:** Logs and provisioning artifacts can be inspected  
 
-**Screenshot Placeholder:**  
-`![Security Screenshot](docs/screenshots/security.png)`
-
 ---
 
 ## Operational Notes

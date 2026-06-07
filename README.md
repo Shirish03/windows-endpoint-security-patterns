@@ -1,4 +1,4 @@
-# redesigned-adventure
+# windows-endpoint-security-patterns
 
 A collection of endpoint security automation patterns and design explorations
 for modern, cloud-managed and hybrid Windows environments.
@@ -32,7 +32,7 @@ Intune and policy-based behavior may be inconsistent.
 
 ### Registry-Based Sysmon Configuration Deployment
 
-**Folder:** `patterns/registry-based-sysmon-config`
+**Folder:** `patterns/sysmon-configuration-via-native-policy`
 
 Provides a method to **deploy and update Sysmon configurations** centrally using
 registry-backed policies, removing the need for repeated package deployments.
