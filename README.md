@@ -1,127 +1,70 @@
-# windows-endpoint-security-patterns
+# Windows Endpoint Security Patterns
 
-A collection of endpoint security automation patterns and design explorations
-for modern, cloud-managed and hybrid Windows environments.
+A practitioner's reference for endpoint security automation in hybrid Entra ID
+and cloud-managed Windows environments.
 
-This repository serves as a workspace for documenting real-world security
-control gaps encountered during endpoint modernization, along with
-event-driven and operationally practical approaches used to address them.
+## Why This Exists
 
-The focus is not on turnkey tooling, but on **patterns, behavior, and design
-decisions** that emerge in complex enterprise environments.
+During enterprise endpoint modernization, several security controls that worked
+reliably in on-premises AD environments either broke silently or had no supported
+equivalent in Hybrid Entra ID and Intune-managed configurations. BitLocker-to-Go
+recovery key escrow was one such control — policy was correctly configured, no
+errors surfaced in Intune, and failures were only visible if you knew which
+Windows event log to watch. This repository documents those gaps and the
+event-driven, operationally practical approaches used to close them without
+introducing new infrastructure or weakening the platform's security model.
 
----
+## Who This Is For
 
-## Documented Patterns
+Endpoint engineers, SecOps practitioners, and Intune/Entra administrators
+operating in hybrid or transitional Windows environments — where devices are
+Entra joined but not fully cloud-native, where Group Policy and Intune coexist,
+and where the answer to a security gap is not always "wait for a platform update."
 
-### Hybrid Entra ID – BitLocker-to-Go Key Escrow
+## Patterns
 
-**Folder:** `patterns/hybrid-entra-btg-key-escrow-pattern`
+| # | Pattern | Problem Solved | Environment |
+|---|---------|----------------|-------------|
+| 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra joined devices | Hybrid Entra ID + Intune |
+| 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
+| 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | SMB / Offline / Labs |
 
-Documents an event-driven approach to handling BitLocker-to-Go recovery key
-escrow failures on Hybrid Entra ID joined Windows devices, where native
-Intune and policy-based behavior may be inconsistent.
+## Engineering Philosophy
 
-**Key concepts explored:**
-- Observing BitLocker API failure events (Event ID 846)
-- Event-triggered remediation via scheduled tasks
-- Programmatic recovery key identification via `manage-bde` and PowerShell
-- Retrying escrow without relying on end-user action
+- **Event-driven over polling.** Platform signals — Windows event logs, API
+  failure codes, observable state changes — are the trigger point. Scripts run
+  in response to verified conditions, not on a schedule.
+- **Patterns and design decisions over turnkey scripts.** Each entry documents
+  why a particular approach was taken, what platform behavior it relies on, and
+  what the operational trade-offs are. The scripts illustrate the pattern; they
+  are not the point.
+- **Enterprise constraints are the baseline assumption.** Change control,
+  limited endpoint agents, audit requirements, and coexistence between Group
+  Policy and Intune are treated as constants, not edge cases.
 
----
+## Environment Assumptions
 
-### Registry-Based Sysmon Configuration Deployment
+These patterns were developed and validated against:
 
-**Folder:** `patterns/sysmon-configuration-via-native-policy`
+- Windows 10 22H2 and Windows 11
+- Hybrid Entra ID joined devices (on-premises AD + Entra ID)
+- Intune-managed, with co-management or standalone Intune policy
+- PowerShell 5.1+ (scripts do not require PowerShell 7)
+- Group Policy infrastructure present (required for the Sysmon pattern)
 
-Provides a method to **deploy and update Sysmon configurations** centrally using
-registry-backed policies, removing the need for repeated package deployments.
+Patterns may apply in broader configurations but have not been validated
+outside this context.
 
-**High-Level Approach:**
+## Using This Repository
 
-```text
-       +---------------------------+
-       | Validated Sysmon XML      |
-       | configuration imported on |
-       | reference system          |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Registry value extracted  |
-       | from:                     |
-       | HKLM\SYSTEM\...\Rules     |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Policy object created     |
-       | with binary registry      |
-       | value (GPO / Policy)      |
-       +------------+--------------+
-                    |
-                    v
-       +---------------------------+
-       | Target systems receive    |
-       | configuration via policy  |
-       | refresh cycles            |
-       +---------------------------+
-```
+Each pattern lives in its own folder under `patterns/` and is self-contained:
 
-## Benefits
-- Centralized, repeatable deployment of Sysmon rules
-- Eliminates reliance on package-based delivery
-- Works at scale across endpoints
+- **README.md** — background, problem statement, and solution overview
+- **docs/** — detailed architecture and design documentation
+- **scripts/** — PowerShell implementation where applicable
+- **examples/** — sanitized samples and illustrative output where applicable
 
-## Considerations
-- Large configurations may slow policy refresh cycles
-- Only tested configurations should be applied to avoid unintended behavior
-
----
-
-### Serverless Windows Provisioning Using WICD
-
-**Folder:** `patterns/serverless-windows-provisioning-wicd`
-
-Documents a **serverless, infrastructure-free Windows provisioning pattern**
-using Windows Imaging and Configuration Designer (WICD).
-
-This pattern is intentionally scoped for scenarios where modern provisioning
-platforms (e.g. Autopilot + Intune) are unavailable, unnecessary, or
-intentionally avoided.
-
-**Typical use cases include:**
-- Small offices with a limited number of workstations
-- Training labs or classroom environments
-- Temporary or disposable devices
-- Offline or restricted-network deployments
-- Workgroup-based systems requiring baseline security and configuration
-
-The approach focuses on **cost-free provisioning**, minimal dependencies,
-and predictable outcomes using native Windows tooling only.
-
-**Key concepts explored:**
-- Serverless OS provisioning without imaging infrastructure
-- Use of provisioning packages (`.ppkg`) for configuration and app setup
-- Security-first provisioning (BitLocker, baseline hardening)
-- User-driven setup without persistent management services
-- Clear boundaries where modern cloud provisioning *does* and *does not* apply
-
-This pattern is not presented as a replacement for Autopilot, but as a
-**complementary design option** for constrained or transitional environments.
-
----
-
-## Repository Philosophy
-- Focus on **design patterns**, not just scripts
-- Prefer **event-driven automation** over polling
-- Assume **enterprise constraints** (change control, audits, limited agents)
-- Avoid embedding tenant-specific or sensitive information
-
-## Disclaimer
-All content in this repository is provided as reference material and design guidance.
-While every effort has been made to ensure accuracy, implementations may require
-adaptation based on environment, configuration, and operational requirements.
-
-Scripts and configurations are provided **as-is**. They may not work in all environments,
-and you should validate behavior in a controlled test environment before production use.
+Start with the pattern README to understand the design context before reading
+the scripts. Each implementation will require adaptation — environment-specific
+paths, policy targeting, and validation in a controlled environment before
+production use.
