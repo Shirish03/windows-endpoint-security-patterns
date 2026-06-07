@@ -33,8 +33,8 @@ without confirming first.
 - [x] Pester 5 test suite for BTG escrow retry script
 
 ## Pending
-- [ ] CHANGELOG.md
-- [ ] CONTRIBUTING.md
+- [x] CHANGELOG.md
+- [x] CONTRIBUTING.md
 - [ ] docs/why-patterns-not-scripts.md (engineering philosophy essay)
 - [ ] Pattern 02: extract PowerShell helper script for registry extraction
 - [ ] GitHub repo topics set (via GitHub UI, not code)
