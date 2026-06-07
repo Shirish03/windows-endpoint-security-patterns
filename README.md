@@ -1,5 +1,8 @@
 # Windows Endpoint Security Patterns
 
+[![PowerShell Validation](https://github.com/Shirish03/windows-endpoint-security-patterns/actions/workflows/powershell-validation.yml/badge.svg)](https://github.com/Shirish03/windows-endpoint-security-patterns/actions/workflows/powershell-validation.yml)
+[![License: MIT](https://img.shields.io/github/license/Shirish03/windows-endpoint-security-patterns)](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/LICENSE)
+
 A practitioner's reference for endpoint security automation in hybrid Entra ID
 and cloud-managed Windows environments.
 
