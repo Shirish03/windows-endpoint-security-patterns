@@ -89,6 +89,11 @@ After import, the compiled configuration is present in the registry as a
 `REG_BINARY` value. This value is exported and becomes the deployment artifact —
 replacing the XML file in downstream distribution.
 
+`Export-SysmonRegistryConfig.ps1` performs this step: it reads the `Rules` value,
+writes a `.reg` file in standard regedit format, and outputs a SHA-256 hash for
+version tracking. See [docs/registry-based-sysmon-config.md](docs/registry-based-sysmon-config.md)
+for usage guidance and GPO deployment field values.
+
 ### 3. Policy Object Definition
 
 The binary registry value is embedded in a Group Policy Object (or equivalent
