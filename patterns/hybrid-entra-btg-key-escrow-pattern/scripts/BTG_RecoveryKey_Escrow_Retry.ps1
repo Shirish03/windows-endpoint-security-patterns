@@ -27,6 +27,9 @@
 #
 # =====================================================================
 
+[CmdletBinding()]
+param()
+
 # -------------------------------
 # Configuration
 # -------------------------------
@@ -58,8 +61,10 @@ function Write-Log {
 # -------------------------------
 if (-not (Get-Command BackupToAAD-BitLockerKeyProtector -ErrorAction SilentlyContinue)) {
     Write-Log "ERROR: Required cmdlet 'BackupToAAD-BitLockerKeyProtector' is not available on this device."
-    return
+    exit 1
 }
+
+$ExitCode = 0
 
 Write-Log "===== Script Execution Started (Version $ScriptVersion) ====="
 
@@ -68,16 +73,27 @@ try {
     # Retrieve the most recent BitLocker-to-Go backup failure event
     # ------------------------------------------------------------
     $Event = Get-WinEvent -FilterHashtable @{
-        LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
+        LogName = 'Microsoft-Windows-BitLocker-API/Management'
         Id      = 846
     } -MaxEvents 1 -ErrorAction SilentlyContinue
 
     if (-not $Event) {
         Write-Log "No recent Event ID 846 found in the BitLocker Management log."
+        $ExitCode = 0
         return
     }
 
     Write-Log "Processing BitLocker event logged at $($Event.TimeCreated)"
+
+    # ------------------------------------------------------------
+    # Recency guard — skip stale events
+    # ------------------------------------------------------------
+    $EventAge = (Get-Date) - $Event.TimeCreated
+    if ($EventAge.TotalMinutes -gt 10) {
+        Write-Log "Event is $([math]::Round($EventAge.TotalMinutes, 1)) minutes old — skipping stale event."
+        $ExitCode = 0
+        return
+    }
 
     # ------------------------------------------------------------
     # Extract drive letter from event message
@@ -96,6 +112,7 @@ try {
 
         if (-not $RecoveryProtectors) {
             Write-Log "ERROR: No RecoveryPassword key protectors found on volume $DriveLetter"
+            $ExitCode = 1
             return
         }
 
@@ -136,3 +153,5 @@ catch {
 finally {
     Write-Log "===== Script Execution Finished ====="
 }
+
+exit $ExitCode
