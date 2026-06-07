@@ -39,7 +39,7 @@ without confirming first.
 - [ ] Pattern 02: extract PowerShell helper script for registry extraction
 - [ ] GitHub repo topics set (via GitHub UI, not code)
 - [x] README badges (lint status, license)
-- [ ] Sample XML in examples/ populated with real structure
+- [x] Sample XML in examples/ populated with real structure
 
 ## Code Standards
 - All scripts use [CmdletBinding()]
