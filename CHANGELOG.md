@@ -13,12 +13,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CLAUDE.md project context and session protocol
 - Pester 5 test suite for BTG escrow retry script
 - README badges for lint status and license
+- `docs/why-patterns-not-scripts.md` engineering philosophy essay
+- `Export-SysmonRegistryConfig.ps1` helper script: extracts compiled Sysmon config
+  from registry as a `.reg` deployment artifact with SHA-256 hash and GPO field values
 
 ### Fixed
 - GitHub Actions workflow moved to correct root `.github/workflows/` location
 - PSScriptAnalyzer workflow corrected: installs module before use, filters by severity
 - Scheduled task XML event channel corrected to `Microsoft-Windows-BitLocker-API/Management`
 - Task execution timeout reduced from PT72H to PT5M
+- BTG README and architecture-flow: removed `manage-bde` references (script uses
+  `Get-BitLockerVolume` only); added `tests/` to Repository Contents
+- BTG architecture-flow: rewrote Architectural Takeaway to close on design decisions
+- BTG examples: corrected "simplified" to "annotated example" in task-explained.md;
+  standardised TracId GUID placeholder to `xxxxxxxx` format in sample-event.json
+- BTG tests: fixed flaky recency-guard boundary test (`-gt 10` not `-ge 10`);
+  updated context description to "more than 10 minutes old"
+- Sysmon docs restructured: removed content duplicated from README, added script
+  usage examples and GPO deployment field values table
+- WICD README: replaced "Why This Project Exists" with "Background", folded
+  "Core Challenge" section into prose, added Disclaimer
+- WICD docs restructured: removed academic scaffolding and README-duplicated sections;
+  added per-component `.ppkg` runtime behavior descriptions
+- Root README: pattern environment labels corrected; `tests/` added to folder list
+- CONTRIBUTING: `try/catch/finally` added to code standards; fixed British spellings
+- Terminology: "Hybrid Entra joined" → "Hybrid Entra ID joined" throughout
 
 ---
 

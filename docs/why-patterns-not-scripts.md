@@ -46,7 +46,7 @@ Scripts don't surface these conditions. Patterns, when written well, name them.
 
 Each pattern in this repository includes environment assumptions. Not as a
 disclaimer, but as a precision statement: *this approach was validated against
-Hybrid Entra joined devices running Windows 10 22H2 and Windows 11, managed
+Hybrid Entra ID joined devices running Windows 10 22H2 and Windows 11, managed
 through standalone Intune, with Group Policy infrastructure present*. If your
 environment matches that, the approach should hold. If it doesn't, you know
 exactly which variable to examine.
