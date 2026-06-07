@@ -105,6 +105,11 @@ connectivity beyond normal policy infrastructure is required.
 
 ## Repository Contents
 
+- `scripts/Export-SysmonRegistryConfig.ps1`  
+  Extracts the compiled Sysmon configuration from the registry on a reference
+  system and writes it as a `.reg` file ready for GPO configuration. Optionally
+  imports a Sysmon XML configuration before extraction.
+
 - `docs/`  
   Detailed documentation covering the registry model, step-by-step approach,
   benefits, and operational considerations
