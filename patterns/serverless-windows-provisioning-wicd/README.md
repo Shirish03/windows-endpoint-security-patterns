@@ -56,7 +56,7 @@ This solution is ideal for scenarios such as:
 - Organizations or projects that require **offline, low-cost, serverless provisioning**  
 - Transitional scenarios before adopting modern cloud platforms like Autopilot  
 
-> For fully cloud-managed deployments (AAD + Intune), Autopilot remains the preferred approach. WICD still provides value for offline or constrained setups, or when bulk provisioning without backend services is desired.
+> For fully cloud-managed deployments (Entra ID + Intune), Autopilot remains the preferred approach. WICD still provides value for offline or constrained setups, or when bulk provisioning without backend services is desired.
 
 ---
 

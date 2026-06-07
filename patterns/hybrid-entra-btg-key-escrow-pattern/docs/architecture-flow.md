@@ -64,7 +64,7 @@ flowchart TB
     subgraph PS[PowerShell Escrow Script Execution]
         E[5. Parse BitLocker API Event]
         F[6. Extract Removable Drive Letter]
-        G[7. Identify Recovery Key Protector<br/>manage-bde / Get-BitLockerVolume]
+        G[7. Identify Recovery Key Protector<br/>Get-BitLockerVolume]
         H[8. Retry Recovery Key Backup to Entra ID]
         I[9. Write Execution Logs: Outcome and Context]
     end

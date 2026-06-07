@@ -47,6 +47,9 @@ and where the answer to a security gap is not always "wait for a platform update
   limited endpoint agents, audit requirements, and coexistence between Group
   Policy and Intune are treated as constants, not edge cases.
 
+For a longer discussion of why this repository is structured around patterns
+rather than scripts, see [docs/why-patterns-not-scripts.md](docs/why-patterns-not-scripts.md).
+
 ## Environment Assumptions
 
 These patterns were developed and validated against:

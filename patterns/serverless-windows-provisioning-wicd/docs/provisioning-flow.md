@@ -128,7 +128,7 @@ flowchart TB
 
 ### Hybrid / Transitional Environments
 - Devices can later integrate into cloud management (Autopilot, Intune)
-- Optional bulk Azure AD join using WICD provisioning package
+- Optional bulk Entra ID join using WICD provisioning package
 
 ---
 
@@ -142,7 +142,7 @@ flowchart TB
 
 ## Operational Notes
 - Approximate provisioning time: ~11 minutes per device  
-- Users follow guided steps for booting media and completing optional Azure AD join  
+- Users follow guided steps for booting media and completing optional Entra ID join  
 - Post-provisioning validation recommended: verify security settings, application installation, and network access  
 
 ---

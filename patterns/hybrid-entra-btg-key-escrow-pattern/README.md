@@ -115,8 +115,7 @@ Performs the following actions:
 
 - Queries the BitLocker API event log for Event ID 846
 - Extracts the removable drive letter from the event data
-- Executes `manage-bde` to identify the recovery password protector
-- Uses `Get-BitLockerVolume` with the extracted protector ID
+- Uses `Get-BitLockerVolume` to enumerate RecoveryPassword protectors on the volume
 - Retries backing up the BitLocker-to-Go recovery key to Entra ID
 
 This avoids reliance on end-user actions and compensates for the
@@ -151,6 +150,9 @@ Handles deployment by:
 
 - `examples/`  
   Sanitized configuration samples and illustrative output
+
+- `tests/`  
+  Pester 5 unit tests for the escrow retry script
 
 ---
 
