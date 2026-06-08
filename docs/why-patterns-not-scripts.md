@@ -18,7 +18,7 @@ Consider the BitLocker-to-Go escrow pattern in this repository. The core of the
 solution is about forty lines of PowerShell. But the script is not the hard part.
 The hard part is understanding:
 
-- Why native Intune escrow fails silently on Hybrid Entra joined devices and
+- Why native Intune escrow fails silently on Hybrid Entra ID joined devices and
   produces no policy error
 - Which event log channel actually captures failure events, and why the channel
   name found in most documentation is wrong
