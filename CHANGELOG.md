@@ -26,7 +26,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Get-BitLockerVolume` only); added `tests/` to Repository Contents
 - BTG architecture-flow: rewrote Architectural Takeaway to close on design decisions
 - BTG examples: corrected "simplified" to "annotated example" in task-explained.md;
-  standardised TracId GUID placeholder to `xxxxxxxx` format in sample-event.json
+  standardized TracId GUID placeholder to `xxxxxxxx` format in sample-event.json
 - BTG tests: fixed flaky recency-guard boundary test (`-gt 10` not `-ge 10`);
   updated context description to "more than 10 minutes old"
 - Sysmon docs restructured: removed content duplicated from README, added script
