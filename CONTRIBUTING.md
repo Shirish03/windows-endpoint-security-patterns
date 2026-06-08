@@ -11,7 +11,7 @@ This is the most valuable contribution. If you tried a pattern and it
 behaved differently in your environment, open an issue and include:
 
 - Windows version and build number
-- Entra join type (Hybrid Entra ID joined, Entra joined, or Entra registered)
+- Entra join type (Hybrid Entra ID joined, Entra ID joined, or Entra registered)
 - Intune management state (co-managed, standalone, or unmanaged)
 - What you expected to happen and what actually happened
 
