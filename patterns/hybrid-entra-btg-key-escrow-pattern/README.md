@@ -4,7 +4,7 @@
 
 While backing up OS drive BitLocker recovery keys to Entra ID is
 well supported today, BitLocker-to-Go recovery key escrow remains
-a gray area when devices are **Hybrid Entra ID Joined and Intune managed**.
+a gray area when devices are **Hybrid Entra ID joined and Intune-managed**.
 
 Although Group Policy and Intune CSPs exist to configure recovery
 key backup behavior, Windows 10/11 does not natively and reliably
@@ -19,7 +19,7 @@ a practical, event-driven workaround.
 ## Observed Platform Behavior
 
 When a user enables BitLocker on a removable USB drive on a
-Hybrid Entra ID Joined device, Windows generates the following event:
+Hybrid Entra ID joined device, Windows generates the following event:
 
 - **Log:** Microsoft-Windows-BitLocker-API/Management  
 - **Event ID:** 846  
