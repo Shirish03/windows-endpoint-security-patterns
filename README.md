@@ -23,14 +23,14 @@ introducing new infrastructure or weakening the platform's security model.
 
 Endpoint engineers, SecOps practitioners, and Intune/Entra administrators
 operating in hybrid or transitional Windows environments — where devices are
-Entra joined but not fully cloud-native, where Group Policy and Intune coexist,
+Entra ID joined but not fully cloud-native, where Group Policy and Intune coexist,
 and where the answer to a security gap is not always "wait for a platform update."
 
 ## Patterns
 
 | # | Pattern | Problem Solved | Environment |
 |---|---------|----------------|-------------|
-| 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra joined devices | Hybrid Entra ID + Intune |
+| 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
 
