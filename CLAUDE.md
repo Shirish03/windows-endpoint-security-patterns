@@ -6,51 +6,72 @@ Endpoint security automation patterns for hybrid Entra ID
 and cloud-managed Windows environments.
 
 ## Purpose
-Portfolio repository demonstrating real-world endpoint security
-engineering judgment. Target roles: Endpoint Security Engineer,
-Intune/Entra specialist, Infrastructure Security Engineer.
+Portfolio repository demonstrating enterprise endpoint 
+security engineering at both practitioner and architect 
+level. Target roles: Endpoint Security Architect, 
+Digital Workspace Architect, Infrastructure Security.
 
 ## Session Start Protocol
-When starting a new session, ask which pattern or task we are
-working on before doing anything else. Do not make file changes
-without confirming first.
+When starting a new session, ask which pattern or task 
+we are working on before doing anything else.
+Do not make file changes without confirming first.
+Work one file at a time and show output before writing.
 
-## Completed
-- [x] Repository renamed from redesigned-adventure
-- [x] Root README rewritten — professional, philosophy-driven
-- [x] BTG pattern scripts updated:
-      [CmdletBinding()], exit codes, recency guard, log name fix,
-      $LASTEXITCODE check, Copy-Item try/catch, Install logging
-- [x] Evidence artifacts added (event-id-846-sample.md, sample-event.json)
-- [x] Architecture flow documentation (architecture-flow.md)
-- [x] GitHub Actions workflow moved to correct location (root .github/)
-- [x] PSScriptAnalyzer workflow fixed (install step, severity filtering)
-- [x] Task XML event channel corrected to BitLocker-API/Management
-- [x] Task XML execution timeout reduced from PT72H to PT5M
-- [x] All pattern diagrams updated to Mermaid
-- [x] Pattern 03 README duplicate H1 removed
-- [x] Decision matrix added to Pattern 03 README
-- [x] Pester 5 test suite for BTG escrow retry script
+## Document Structure — Option B
+Each pattern README has four clearly labelled sections:
 
-## Pending
-- [x] CHANGELOG.md
-- [x] CONTRIBUTING.md
-- [x] docs/why-patterns-not-scripts.md (engineering philosophy essay)
-- [x] Pattern 02: extract PowerShell helper script for registry extraction
-- [x] GitHub repo topics set (via GitHub UI, not code)
-- [x] README badges (lint status, license)
-- [x] Sample XML in examples/ populated with real structure
+1. Strategic Overview
+   Audience: security architects, IT leadership, CISOs
+   Content: problem context, risk, compliance 
+   implications, recommendation statement
+
+2. Architecture & Design
+   Audience: architects and senior engineers
+   Content: diagrams, components, design principles,
+   trade-offs, alternatives considered
+
+3. Implementation Reference
+   Audience: engineers deploying the solution
+   Content: scripts, configuration, validation steps,
+   environment requirements
+
+4. Operational Guidance
+   Audience: operations and support teams
+   Content: monitoring, failure modes, renewal,
+   maintenance, dependencies
+
+Each README starts with a navigation block linking
+to all four sections.
+
+## Patterns Status
+- [ ] Pattern 01 BTG Escrow — Option B restructure
+- [ ] Pattern 02 Sysmon Registry — Option B retrofit
+- [ ] Pattern 03 WICD Provisioning — Option B retrofit
+- [ ] Pattern 04 SCEP Internal NDES — create from scratch
+- [ ] Root README updated for all four patterns
+- [ ] Whitepaper 01 BTG — markdown + PDF
+- [ ] Whitepaper 02 SCEP — markdown + PDF
+- [ ] GitHub Releases for both whitepapers
+- [ ] LinkedIn article published
 
 ## Code Standards
 - All scripts use [CmdletBinding()]
 - Structured logging to C:\ProgramData\BitLocker\Logs\
 - try/catch/finally on all execution paths
-- exit 0 / exit 1 instead of bare return at script scope
+- exit 0 / exit 1 not bare return at script scope
 - PSScriptAnalyzer clean at Error severity
 - Event log channel: Microsoft-Windows-BitLocker-API/Management
 
-## Last Updated
-2026-06-07
+## Known Bugs Still to Fix
+- ~~Task XML: event channel name wrong~~
+  ~~(Microsoft-Windows-BitLocker/BitLocker Management~~
+  ~~should be Microsoft-Windows-BitLocker-API/Management)~~ FIXED
+- ~~GitHub Actions workflow location: must be at root~~
+  ~~.github/workflows/ not inside pattern folder~~ FIXED
+- schtasks.exe needs $LASTEXITCODE check in installer
 
-## Current Focus
-[update at start of each session]
+## Last Updated
+2026-06-10
+
+## Current Session Focus
+Bug fixes: workflow location and task XML event channel (both resolved)
