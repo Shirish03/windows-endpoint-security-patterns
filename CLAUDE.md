@@ -68,7 +68,7 @@ to all four sections.
   ~~should be Microsoft-Windows-BitLocker-API/Management)~~ FIXED
 - ~~GitHub Actions workflow location: must be at root~~
   ~~.github/workflows/ not inside pattern folder~~ FIXED
-- schtasks.exe needs $LASTEXITCODE check in installer
+- ~~schtasks.exe needs $LASTEXITCODE check in installer~~ FIXED
 
 ## Last Updated
 2026-06-10
