@@ -48,7 +48,7 @@ to all four sections.
 - [x] Pattern 01 BTG Escrow — fine-tuning fixes (portal paths, cross-references, repository table)
 - [ ] Pattern 02 Sysmon Registry — Option B retrofit
 - [ ] Pattern 03 WICD Provisioning — Option B retrofit
-- [ ] Pattern 04 SCEP Internal NDES — create from scratch
+- [x] Pattern 04 SCEP Internal NDES — create from scratch
 - [ ] Root README updated for all four patterns
 - [ ] Whitepaper 01 BTG — markdown + PDF
 - [ ] Whitepaper 02 SCEP — markdown + PDF
@@ -75,4 +75,4 @@ to all four sections.
 2026-06-11
 
 ## Current Session Focus
-Pattern 01 complete — ready for Phase 3 Pattern 04
+Pattern 04 complete — Patterns 01 and 04 done
