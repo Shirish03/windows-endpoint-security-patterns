@@ -44,7 +44,8 @@ Each README starts with a navigation block linking
 to all four sections.
 
 ## Patterns Status
-- [ ] Pattern 01 BTG Escrow — Option B restructure
+- [x] Pattern 01 BTG Escrow — Option B restructure
+- [x] Pattern 01 BTG Escrow — fine-tuning fixes (portal paths, cross-references, repository table)
 - [ ] Pattern 02 Sysmon Registry — Option B retrofit
 - [ ] Pattern 03 WICD Provisioning — Option B retrofit
 - [ ] Pattern 04 SCEP Internal NDES — create from scratch
@@ -71,7 +72,7 @@ to all four sections.
 - ~~schtasks.exe needs $LASTEXITCODE check in installer~~ FIXED
 
 ## Last Updated
-2026-06-10
+2026-06-11
 
 ## Current Session Focus
-Bug fixes: workflow location and task XML event channel (both resolved)
+Pattern 01 complete — ready for Phase 3 Pattern 04
