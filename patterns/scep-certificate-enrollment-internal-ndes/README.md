@@ -283,3 +283,166 @@ them is an infrastructure strategy decision, not a security one — both
 models can achieve equivalent security posture.
 
 ---
+
+## Implementation Reference
+
+### Environment Requirements
+
+| Requirement | Detail |
+|---|---|
+| **NDES server OS** | Windows Server 2016, 2019, or 2022 |
+| **CA** | Active Directory Certificate Services (Enterprise CA); Standalone CA not supported for Intune SCEP |
+| **Certificate Connector v2 OS** | Windows Server 2016, 2019, or 2022; domain-joined |
+| **Certificate Connector v2 .NET** | .NET Framework 4.7.2 or later |
+| **Intune subscription** | Microsoft Intune Plan 1 or equivalent |
+| **Device management** | Hybrid Entra ID joined; Intune-managed |
+| **Network — connector outbound** | HTTPS (443) to Intune service endpoints; no inbound rules required |
+| **Network — connector to NDES** | HTTPS or HTTP from connector server to NDES; internal network only |
+| **NDES service account** | Domain account; IIS_IUSRS member; enrollment agent certificate |
+
+---
+
+### NDES Prerequisites
+
+Before installing the Certificate Connector v2, NDES must be deployed and
+functional on an internal server.
+
+**Service account**
+NDES requires a dedicated domain service account with:
+- Local logon rights on the NDES server
+- Enroll permission on the NDES enrollment agent certificate template
+- Read and Enroll permission on the device certificate template
+
+**Certificate templates**
+Three templates must be configured on the CA:
+
+1. **CEP Encryption** — used by NDES to encrypt challenge passwords
+2. **Exchange Enrollment Agent (Offline Request)** — used by NDES to sign
+   requests on behalf of devices
+3. **Device certificate template** — the template for issued device
+   certificates; key usage, EKU, and subject constraints must match the
+   Intune SCEP profile exactly
+
+**IIS configuration**
+NDES installs as an IIS web application. The NDES URL must be reachable
+from the Certificate Connector v2 server over the internal network.
+Confirm IIS is running and the NDES application pool is started before
+proceeding to connector installation.
+
+---
+
+### Certificate Connector v2 — Installation
+
+The Certificate Connector v2 installer is available from the Intune admin
+center under **Tenant administration → Connectors and tokens →
+Certificate connectors**.
+
+> **Note on the legacy connector:** Microsoft has deprecated the original
+> Intune Certificate Connector. If the legacy connector is currently
+> installed in the environment, it must be migrated — the two connectors
+> cannot coexist on the same server. The legacy connector is no longer
+> receiving feature updates and will reach end of support. Treat migration
+> as a priority for any environment still running it.
+
+**Installation steps:**
+
+1. Download the connector installer from the Intune admin center
+2. Run the installer on the domain-joined connector server with local
+   administrator rights
+3. During setup, authenticate with an account holding the **Intune
+   Administrator** or **Cloud Device Administrator** Entra ID role —
+   this creates the Entra ID app registration the connector uses for
+   authentication
+4. Configure the connector to point to the internal NDES URL
+5. Verify the connector service (`Microsoft Intune Certificate Connector`)
+   is running
+
+The connector authenticates to Intune via the Entra ID app registration
+created at install time. No service account password management is
+required.
+
+---
+
+### SCEP Profile Configuration
+
+Configure the SCEP profile in the Intune admin center under **Devices →
+Configuration → Create → Windows 10 and later → Templates → SCEP
+certificate**.
+
+Key profile settings with annotations are documented in
+[`examples/scep-profile-sample.md`](examples/scep-profile-sample.md).
+
+The following settings must align exactly with the CA certificate
+template:
+
+| Profile setting | Must match |
+|---|---|
+| Key size | Template minimum key size |
+| Hash algorithm | Template signature hash algorithm |
+| Certificate validity period | Template validity period (or less) |
+| Extended key usage | Template EKU configuration |
+| Subject name format | Template subject name constraints |
+
+Mismatches between the SCEP profile and the CA template are a common
+cause of issuance failure. The CA rejects the request at Step 6 of the
+enrollment flow and logs the denial reason — see
+[Operational Guidance → Failure Detection](#failure-detection).
+
+---
+
+### Validation
+
+**1. Verify connector status**
+
+In the Intune admin center, navigate to **Tenant administration →
+Connectors and tokens → Certificate connectors**. The connector should
+show status **Active**. A status of **Error** or **Inactive** indicates
+a connectivity or authentication issue.
+
+**2. Confirm NDES is reachable from the connector server**
+
+From the connector server, browse to the NDES URL:
+
+```
+https://<ndes-server>/certsrv/mscep/mscep.dll
+```
+
+A `400 Bad Request` response or a certificate challenge prompt indicates
+NDES is running. A connection failure indicates a network or IIS issue.
+
+**3. Trigger a test enrollment**
+
+Assign the SCEP profile to a test device and force an Intune sync:
+
+```powershell
+Start-Process -FilePath "C:\Windows\System32\deviceenroller.exe" -ArgumentList "/o"
+```
+
+After the sync, check the device certificate store:
+
+```powershell
+Get-ChildItem -Path Cert:\LocalMachine\My |
+    Where-Object { $_.Subject -like "*DeviceName*" } |
+    Select-Object Subject, NotBefore, NotAfter, Thumbprint
+```
+
+**4. Verify issuance in the CA**
+
+On the CA server, open the Certification Authority console and check
+**Issued Certificates** for a recently issued certificate matching the
+device name. If the request was rejected, check **Failed Requests** for
+the denial reason.
+
+**5. Review connector logs**
+
+The Certificate Connector v2 writes logs to:
+
+```
+%ProgramFiles%\Microsoft Intune\PFXCertificateConnector\ConnectorLog\
+```
+
+Each enrollment attempt is logged with a request ID, timestamp, and
+outcome. Cross-reference the request ID with the Intune device enrollment
+report for end-to-end visibility.
+
+---
