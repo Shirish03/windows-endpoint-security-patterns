@@ -315,6 +315,10 @@ After a successful escrow retry, the recovery key should also be visible
 in the Entra ID portal under the device record:
 **Azure Active Directory → Devices → [Device] → BitLocker Keys**.
 
+> For ongoing monitoring of this mechanism in
+> production, see
+> [Operational Guidance → Monitoring After Deployment](#monitoring-after-deployment).
+
 ---
 
 ### Repository Contents
