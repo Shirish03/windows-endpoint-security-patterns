@@ -446,3 +446,159 @@ outcome. Cross-reference the request ID with the Intune device enrollment
 report for end-to-end visibility.
 
 ---
+
+## Operational Guidance
+
+### Monitoring After Deployment
+
+**Connector health**
+The Certificate Connector v2 reports its status to the Intune admin
+center under **Tenant administration → Connectors and tokens →
+Certificate connectors**. An **Active** status confirms the connector is
+communicating with Intune. An **Error** or **Inactive** status requires
+immediate investigation — no certificate enrollment will succeed while
+the connector is unhealthy.
+
+The connector writes detailed operational logs to:
+
+```
+%ProgramFiles%\Microsoft Intune\PFXCertificateConnector\ConnectorLog\
+```
+
+Review these logs when investigating enrollment failures or after
+connector updates.
+
+**CA issuance events**
+The CA provides the authoritative record of all certificate activity.
+Monitor for:
+- **Issued Certificates** — volume and device names; unexpected drops
+  indicate enrollment issues
+- **Failed Requests** — any entry here represents a request the CA
+  rejected; the denial reason is logged and should be reviewed promptly
+- **CRL validity** — if the CRL published by the CA expires, devices may
+  reject the CA's certificates during authentication
+
+**Intune device enrollment reports**
+In the Intune admin center, the SCEP profile deployment status shows
+per-device success or failure. A profile showing **Failed** for a device
+means enrollment did not complete. The error code in the report maps to
+a point in the enrollment flow — see Failure Detection below.
+
+---
+
+### Certificate Renewal
+
+SCEP certificates are renewed automatically when the device reaches the
+renewal threshold configured in the SCEP profile (recommended: 20% of
+certificate lifetime remaining). Renewal follows the same flow as initial
+enrollment — the device must be enrolled, compliant, and able to reach
+Intune.
+
+**Connectivity dependency**
+Renewal requires the device to complete an Intune MDM sync while
+connected to the internet. Devices that are offline for extended periods
+may miss the renewal window. If a device goes offline before the renewal
+threshold is reached and the certificate expires while offline, the device
+must reconnect and trigger a manual sync to re-enroll from scratch.
+
+**CRL and OCSP availability**
+Devices validate the CA chain when using issued certificates for
+authentication. The CA's CRL distribution points and OCSP responder must
+be reachable from managed devices. For devices that authenticate to Wi-Fi
+or VPN using a device certificate, CRL unavailability can block the
+authentication the device needs to reach the network — creating a
+circular dependency. Confirm CRL distribution points are accessible from
+devices before authentication dependencies are established.
+
+---
+
+### Coordination with PKI Team
+
+This solution introduces a dependency between Intune operations and the
+on-premises PKI. Changes on either side can affect the other. Establish
+a coordination process for the following change types:
+
+| Change type | Action required |
+|---|---|
+| CA certificate template change | Update Intune SCEP profile in the same change window |
+| CA renewal or replacement | Update trusted root and intermediate profiles in Intune; update connector if CA FQDN changes |
+| NDES server change or migration | Update connector configuration; validate end-to-end enrollment before decommissioning old NDES |
+| Certificate Connector v2 update | Review release notes for breaking changes; validate connector status post-update |
+| CRL or OCSP URL change | Update CA template CDP extensions; allow time for existing certificates to reflect new URLs before old URLs are decommissioned |
+
+---
+
+### Failure Detection
+
+**Symptom: SCEP profile shows Failed in Intune for a device**
+
+Check the error code in the Intune device configuration report:
+
+| Error | Likely cause | Resolution |
+|---|---|---|
+| 0x87D1FDE8 | Device could not reach the SCEP URL | Verify connector is Active; check device internet connectivity |
+| 0x80094800 | Challenge password invalid or expired | Retry sync — Intune will issue a fresh challenge password |
+| 0x80094801 | Challenge password already used | Retry sync — one-time passwords cannot be reused |
+| CA denial (various) | Template mismatch, permissions, or key constraints | Check Failed Requests on CA; compare template and SCEP profile settings |
+
+**Symptom: Connector shows Error or Inactive in Intune**
+
+```powershell
+Get-Service -Name "Microsoft Intune Certificate Connector" |
+    Select-Object Name, Status, StartType
+```
+
+If the service is stopped, start it and check the connector logs for the
+failure reason. Common causes: Entra ID app registration token expired
+(re-authenticate by re-running connector setup), network change blocking
+outbound HTTPS to Intune endpoints, or a connector update requiring
+manual intervention.
+
+**Symptom: Certificate installed on device but authentication fails**
+
+If the certificate is present in the device store but authentication to
+Wi-Fi or VPN fails, check:
+- Certificate EKU matches what the authentication server requires
+  (Client Authentication OID: 1.3.6.1.5.5.7.3.2)
+- CA chain is trusted on the authenticating server (RADIUS/NPS)
+- CRL is reachable and not expired
+- Certificate subject or SAN matches the identity expected by the
+  authentication policy
+
+**Symptom: Renewal fails for a subset of devices**
+
+Devices that fail renewal while compliant are typically
+connectivity-related. Check:
+- Last Intune sync time — devices that have not synced recently will not
+  have received the renewal trigger
+- Whether affected devices are on a network that blocks Intune endpoints
+- Whether devices are at or past certificate expiry — expired certificates
+  cannot be renewed; the device must re-enroll via a forced sync
+
+---
+
+### Dependencies
+
+| Dependency | Notes |
+|---|---|
+| Certificate Connector v2 | Must be Active; single point of failure unless multiple connector instances are deployed for high availability |
+| NDES service availability | NDES downtime blocks all enrollment and renewal; monitor IIS and application pool health |
+| CA availability | CA downtime blocks issuance; CRL expiry can independently block authentication |
+| Intune MDM connectivity | Devices must reach Intune to receive SCEP URLs and challenge passwords |
+| CRL/OCSP reachability from devices | Required for certificate validation during authentication; failure creates circular dependency in network-auth scenarios |
+| PKI team change coordination | Template or CA changes without Intune profile alignment will cause enrollment failures |
+
+---
+
+## Disclaimer
+
+This solution is provided as a reference implementation and design
+pattern. It has been developed against specific Hybrid Entra ID and
+Intune-managed environment configurations and may require adaptation
+for other environments.
+
+There is no guarantee that this approach will function identically in
+all environments. Administrators should review, test, and validate
+behaviour in a controlled setting before any production use.
+
+Use at your own discretion.
