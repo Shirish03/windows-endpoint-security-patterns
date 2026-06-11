@@ -145,44 +145,88 @@ Connector v2, eliminating direct internet exposure of the NDES server
 while preserving full Intune-managed SCEP enrollment functionality.
 
 ```mermaid
-flowchart TB
-    classDef success fill:#d4edda,stroke:#28a745,color:#155724
-    classDef failure fill:#f8d7da,stroke:#dc3545,color:#721c24
-    classDef warning fill:#fff3cd,stroke:#ffc107,color:#856404
+flowchart LR
+    classDef cloud fill:#e8f0fe,stroke:#4285f4,color:#1a237e
+    classDef corporate fill:#f3e8fd,stroke:#9334e6,color:#2a0050
+    classDef secure fill:#e6f4ea,stroke:#34a853,color:#1a4726
+    classDef endpoint fill:#fff8e1,stroke:#fbbc04,color:#5f4200
 
-    A["Intune MDM check-in\nCompliance evaluation"]
-    B{"Device enrolled\nand compliant?"}
-    C["❌ No SCEP URL issued\nRetry on next sync"]:::failure
-    D["Intune issues SCEP URL\n+ one-time challenge password\n(time-limited, single-use)"]
-    E["Device generates RSA key pair\nPrivate key stays on device"]
-    F["Device constructs CSR\nCN={{DeviceName}}\nSAN: IntuneDeviceId://{{DeviceId}}\nChallenge password embedded"]
-    G["SCEP request sent to\nCertificate Connector v2\n(outbound relay — no inbound port required)"]
-    H["Connector validates request\norigin from Intune service\nForwards to internal NDES"]
-    I{"NDES validates\nchallenge password"}
-    J["❌ Challenge invalid\nor expired — request rejected\nDevice retries on next sync"]:::failure
-    K["NDES forwards CSR\nto Certificate Authority"]
-    L{"CA validates template\nand permissions"}
-    M["❌ CA rejects request\nTemplate mismatch or\npermission failure — logged"]:::failure
-    N["✅ CA issues certificate\nReturns through NDES\nConnector → Intune → Device"]:::success
-    O["Certificate installed\nin device Machine store\nEnrollment complete"]:::success
+    subgraph Internet["Internet / Off-Network"]
+        InternetDevices["Remote Devices\n(Off-Network)"]:::endpoint
+    end
 
-    A --> B
-    B -->|Not enrolled or non-compliant| C
-    B -->|Enrolled and compliant| D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> I
-    I -->|Invalid or expired| J
-    I -->|Valid| K
-    K --> L
-    L -->|Rejected| M
-    L -->|Approved| N
-    N --> O
+    subgraph Cloud["Cloud Services"]
+        Intune["Device Management\nService"]:::cloud
+        Identity["Identity Provider"]:::cloud
+        ZTNACloud["Secure Access\nBroker"]:::cloud
+    end
+
+    subgraph Corporate["Corporate Network"]
+        OnPremDevices["On-Prem Devices\n(LAN / Wi-Fi)"]:::endpoint
+        NDES["NDES\nSCEP Endpoint"]:::corporate
+        Connector["Certificate\nConnector"]:::corporate
+        AppConnector["ZTNA\nApp Connector"]:::corporate
+    end
+
+    subgraph Secure["Secure Services Zone"]
+        CA["Issuing CA"]:::secure
+        Directory["Directory\nServices"]:::secure
+        RootCA["Root CA"]:::secure
+    end
+
+    %% Enrollment and profile delivery
+    Intune -->|"❶ MDM Profile Delivery"| OnPremDevices
+    Intune -->|"❶ MDM Profile Delivery"| InternetDevices
+
+    %% Certificate request — on-network path
+    OnPremDevices -->|"❷ CSR + Challenge"| NDES
+
+    %% Certificate request — off-network path via ZTNA
+    InternetDevices -.->|"❷a ZTNA Session"| ZTNACloud
+    ZTNACloud -.->|"❷b Broker Relay"| AppConnector
+    AppConnector -.->|"❷c Forward Request"| NDES
+
+    %% Validation
+    NDES --> Connector
+    Connector -->|"❸ Validate Request"| Intune
+    Intune -->|"❹ Validation Response"| Connector
+
+    %% Directory authentication
+    NDES -->|"❺ Authenticate"| Directory
+
+    %% Certificate issuance
+    NDES -->|"❻ Submit CSR"| CA
+    CA -->|"❼ Verify Permissions"| Directory
+    CA -->|"❽ Return Certificate"| NDES
+
+    %% Metadata reporting
+    Connector -->|"❾ Report Metadata"| Intune
+
+    %% Certificate delivery
+    NDES -->|"❿ Certificate Response"| OnPremDevices
+    NDES -.->|"❿a Via ZTNA Session"| InternetDevices
+
+    %% Completion
+    OnPremDevices -->|"⓫ Status Update"| Intune
+    InternetDevices -->|"⓫ Status Update"| Intune
+
+    %% PKI trust chain
+    RootCA -->|"Trust Chain"| CA
 ```
 
-> Color guide: green nodes = success paths, red = terminal failure or rejection points.
+> The remote certificate path (❷a–❷c) uses a
+> broker-mediated ZTNA session — the device and
+> App Connector each establish outbound connections
+> to the Secure Access Broker, which proxies the
+> SCEP request between them. No inbound firewall
+> rules or network-level tunnels are required on
+> either side. The return path (❿a) traverses the
+> same brokered session in reverse.
+>
+> This pattern is vendor-neutral and compatible
+> with any ZTNA product using the broker model,
+> including Zscaler Private Access, Cloudflare
+> Access, and Microsoft Entra Private Access.
 
 ---
 
