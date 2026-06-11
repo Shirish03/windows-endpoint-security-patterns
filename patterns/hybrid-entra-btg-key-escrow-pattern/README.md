@@ -319,23 +319,16 @@ in the Entra ID portal under the device record:
 
 ### Repository Contents
 
-```
-hybrid-entra-btg-key-escrow-pattern/
-├── scripts/
-│   ├── BTG_RecoveryKey_Escrow_Retry.ps1      # Escrow retry logic
-│   └── Install-BTGRecoveryKeyEscrow.ps1      # Deployment helper
-├── tasks/
-│   └── BitLockerToGo-Escrow-Retry.xml        # Scheduled task definition
-├── docs/
-│   ├── architecture-flow.md                  # Detailed architecture narrative
-│   └── event-id-846-sample.md                # Event structure and field reference
-├── examples/
-│   ├── BitLockerToGo-Escrow-Retry.sample.xml
-│   └── sample-event.json
-├── tests/
-│   └── BTG_RecoveryKey_Escrow_Retry.Tests.ps1
-└── README.md
-```
+| File | Purpose |
+|---|---|
+| `scripts/BTG_RecoveryKey_Escrow_Retry.ps1` | Core escrow retry logic — event parsing, drive letter extraction, and recovery key backup to Entra ID |
+| `scripts/Install-BTGRecoveryKeyEscrow.ps1` | Deployment helper — copies scripts to target path and registers the scheduled task |
+| `tasks/BitLockerToGo-Escrow-Retry.xml` | Scheduled task definition — event trigger configuration and execution context |
+| `docs/architecture-flow.md` | Detailed architecture narrative with annotated component walkthrough |
+| `docs/event-id-846-sample.md` | Event structure reference — field mapping, log channel documentation, and 845 vs 846 comparison |
+| `examples/BitLockerToGo-Escrow-Retry.sample.xml` | Illustrative sample task XML for reference |
+| `examples/sample-event.json` | Sanitised Event ID 846 sample for testing and reference |
+| `tests/BTG_RecoveryKey_Escrow_Retry.Tests.ps1` | Pester 5 unit tests for core script logic |
 
 ---
 
