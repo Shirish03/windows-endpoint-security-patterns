@@ -46,8 +46,8 @@ to all four sections.
 ## Patterns Status
 - [x] Pattern 01 BTG Escrow — Option B restructure
 - [x] Pattern 01 BTG Escrow — fine-tuning fixes (portal paths, cross-references, repository table)
-- [ ] Pattern 02 Sysmon Registry — Option B retrofit
-- [ ] Pattern 03 WICD Provisioning — Option B retrofit
+- [x] Pattern 02 Sysmon Registry — Option B retrofit
+- [x] Pattern 03 WICD Provisioning — Option B retrofit
 - [x] Pattern 04 SCEP Internal NDES — create from scratch
 - [x] Pattern 04 SCEP diagram — ZTNA session terminology, colour coding, PKI trust chain
 - [x] Pattern 04 SCEP diagram — simplified TD layout, NDES internal boundary, ZTNA subsection added
@@ -77,4 +77,4 @@ to all four sections.
 2026-06-12
 
 ## Current Session Focus
-Pattern 04 diagram and ZTNA subsection finalised — next: Pattern 02 Option B retrofit
+All four patterns complete — next: root README update, whitepapers, GitHub Releases, LinkedIn
