@@ -52,7 +52,7 @@ to all four sections.
 - [x] Pattern 04 SCEP diagram — ZTNA session terminology, colour coding, PKI trust chain
 - [x] Pattern 04 SCEP diagram — simplified TD layout, NDES internal boundary, ZTNA subsection added
 - [x] Root README updated for all four patterns
-- [x] Whitepaper 01 BTG — markdown + PDF
+- [x] Whitepaper 01 BTG — markdown + HTML (styled CSS + Mermaid.js CDN; print to PDF from browser)
 - [ ] Whitepaper 02 SCEP — markdown + PDF
 - [ ] GitHub Releases for both whitepapers
 - [ ] LinkedIn article published
@@ -77,4 +77,4 @@ to all four sections.
 2026-06-12
 
 ## Current Session Focus
-Whitepaper 01 BTG complete — next: Whitepaper 02 SCEP
+Whitepaper 01 BTG HTML complete and pushed — next session: Whitepaper 02 SCEP markdown + HTML
