@@ -50,6 +50,7 @@ to all four sections.
 - [ ] Pattern 03 WICD Provisioning — Option B retrofit
 - [x] Pattern 04 SCEP Internal NDES — create from scratch
 - [x] Pattern 04 SCEP diagram — ZTNA session terminology, colour coding, PKI trust chain
+- [x] Pattern 04 SCEP diagram — simplified TD layout, NDES internal boundary, ZTNA subsection added
 - [ ] Root README updated for all four patterns
 - [ ] Whitepaper 01 BTG — markdown + PDF
 - [ ] Whitepaper 02 SCEP — markdown + PDF
@@ -73,7 +74,7 @@ to all four sections.
 - ~~schtasks.exe needs $LASTEXITCODE check in installer~~ FIXED
 
 ## Last Updated
-2026-06-11
+2026-06-12
 
 ## Current Session Focus
-Patterns 01 and 04 complete — next session: Pattern 02 and 03 Option B retrofits
+Pattern 04 diagram and ZTNA subsection finalised — next: Pattern 02 Option B retrofit
