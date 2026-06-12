@@ -49,6 +49,7 @@ to all four sections.
 - [ ] Pattern 02 Sysmon Registry — Option B retrofit
 - [ ] Pattern 03 WICD Provisioning — Option B retrofit
 - [x] Pattern 04 SCEP Internal NDES — create from scratch
+- [x] Pattern 04 SCEP diagram — ZTNA session terminology, colour coding, PKI trust chain
 - [ ] Root README updated for all four patterns
 - [ ] Whitepaper 01 BTG — markdown + PDF
 - [ ] Whitepaper 02 SCEP — markdown + PDF
@@ -75,4 +76,4 @@ to all four sections.
 2026-06-11
 
 ## Current Session Focus
-Pattern 04 complete — Patterns 01 and 04 done
+Patterns 01 and 04 complete — next session: Pattern 02 and 03 Option B retrofits
