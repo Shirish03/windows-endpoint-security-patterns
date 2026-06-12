@@ -145,88 +145,93 @@ Connector v2, eliminating direct internet exposure of the NDES server
 while preserving full Intune-managed SCEP enrollment functionality.
 
 ```mermaid
-flowchart LR
+flowchart TD
     classDef cloud fill:#e8f0fe,stroke:#4285f4,color:#1a237e
-    classDef corporate fill:#f3e8fd,stroke:#9334e6,color:#2a0050
+    classDef internal fill:#f3e8fd,stroke:#9334e6,color:#2a0050
     classDef secure fill:#e6f4ea,stroke:#34a853,color:#1a4726
-    classDef endpoint fill:#fff8e1,stroke:#fbbc04,color:#5f4200
+    classDef device fill:#fff8e1,stroke:#fbbc04,color:#5f4200
 
-    subgraph Internet["Internet / Off-Network"]
-        InternetDevices["Remote Devices\n(Off-Network)"]:::endpoint
+    subgraph Internet["🌐 Internet"]
+        RemoteDevice["Remote Device\n(off-network)"]:::device
     end
 
-    subgraph Cloud["Cloud Services"]
-        Intune["Device Management\nService"]:::cloud
-        Identity["Identity Provider"]:::cloud
-        ZTNACloud["Secure Access\nBroker"]:::cloud
+    subgraph Cloud["☁ Microsoft Cloud"]
+        Intune["Microsoft Intune\n(MDM + Compliance)"]:::cloud
+        ZTNA["ZTNA Broker\n(e.g. Zscaler, Cloudflare)"]:::cloud
     end
 
-    subgraph Corporate["Corporate Network"]
-        OnPremDevices["On-Prem Devices\n(LAN / Wi-Fi)"]:::endpoint
-        NDES["NDES\nSCEP Endpoint"]:::corporate
-        Connector["Certificate\nConnector"]:::corporate
-        AppConnector["ZTNA\nApp Connector"]:::corporate
+    subgraph OrgNetwork["🏢 Organisation Network — NDES not reachable from internet"]
+        OnPremDevice["On-Prem Device\n(LAN / Wi-Fi)"]:::device
+        Connector["Certificate Connector v2\n(outbound-only to Intune)"]:::internal
+        NDES["NDES\n(internal only —\nnot internet-exposed)"]:::internal
+        CA["Certificate Authority"]:::secure
     end
 
-    subgraph Secure["Secure Services Zone"]
-        CA["Issuing CA"]:::secure
-        Directory["Directory\nServices"]:::secure
-        RootCA["Root CA"]:::secure
-    end
+    %% Profile delivery
+    Intune -->|"① Policy + SCEP URL"| OnPremDevice
+    Intune -->|"① Policy + SCEP URL"| RemoteDevice
 
-    %% Enrollment and profile delivery
-    Intune -->|"❶ MDM Profile Delivery"| OnPremDevices
-    Intune -->|"❶ MDM Profile Delivery"| InternetDevices
+    %% On-network path
+    OnPremDevice -->|"② Certificate request"| Connector
 
-    %% Certificate request — on-network path
-    OnPremDevices -->|"❷ CSR + Challenge"| NDES
+    %% Off-network path via ZTNA
+    RemoteDevice -.->|"② Via ZTNA session\n(broker-mediated)"| ZTNA
+    ZTNA -.->|"Relayed into\norg network"| Connector
 
-    %% Certificate request — off-network path via ZTNA
-    InternetDevices -.->|"❷a ZTNA Session"| ZTNACloud
-    ZTNACloud -.->|"❷b Broker Relay"| AppConnector
-    AppConnector -.->|"❷c Forward Request"| NDES
+    %% Validation and issuance
+    Connector -->|"③ Validate with Intune"| Intune
+    Intune -->|"④ Approved"| Connector
+    Connector -->|"⑤ Forward to NDES"| NDES
+    NDES -->|"⑥ Request certificate"| CA
+    CA -->|"⑦ Issue certificate"| NDES
+    NDES -->|"⑧ Return certificate"| Connector
 
-    %% Validation
-    NDES --> Connector
-    Connector -->|"❸ Validate Request"| Intune
-    Intune -->|"❹ Validation Response"| Connector
-
-    %% Directory authentication
-    NDES -->|"❺ Authenticate"| Directory
-
-    %% Certificate issuance
-    NDES -->|"❻ Submit CSR"| CA
-    CA -->|"❼ Verify Permissions"| Directory
-    CA -->|"❽ Return Certificate"| NDES
-
-    %% Metadata reporting
-    Connector -->|"❾ Report Metadata"| Intune
-
-    %% Certificate delivery
-    NDES -->|"❿ Certificate Response"| OnPremDevices
-    NDES -.->|"❿a Via ZTNA Session"| InternetDevices
-
-    %% Completion
-    OnPremDevices -->|"⓫ Status Update"| Intune
-    InternetDevices -->|"⓫ Status Update"| Intune
-
-    %% PKI trust chain
-    RootCA -->|"Trust Chain"| CA
+    %% Delivery
+    Connector -->|"⑨ Deliver certificate"| OnPremDevice
+    Connector -.->|"⑨ Deliver via ZTNA"| RemoteDevice
 ```
 
-> The remote certificate path (❷a–❷c) uses a
-> broker-mediated ZTNA session — the device and
-> App Connector each establish outbound connections
-> to the Secure Access Broker, which proxies the
-> SCEP request between them. No inbound firewall
-> rules or network-level tunnels are required on
-> either side. The return path (❿a) traverses the
-> same brokered session in reverse.
->
-> This pattern is vendor-neutral and compatible
-> with any ZTNA product using the broker model,
-> including Zscaler Private Access, Cloudflare
-> Access, and Microsoft Entra Private Access.
+---
+
+### A Note on ZTNA
+
+ZTNA — Zero Trust Network Access — is a category of technology
+that allows remote devices to reach internal applications
+without connecting to the corporate network as a whole.
+
+Traditional VPN gives a remote device a foothold on the
+internal network — once connected, the device can potentially
+reach anything on it. ZTNA works differently. The device
+connects to a cloud-based broker. The broker has a paired
+connector running inside the corporate network. The broker
+stitches the two connections together to create a session
+for one specific application or endpoint — and nothing else.
+The remote device never gets an IP address on the internal
+network and cannot browse the network freely.
+
+For this pattern, ZTNA allows a remote device to reach the
+Certificate Connector endpoint as if it were on the corporate
+network — without exposing NDES or any other internal
+infrastructure to the internet.
+
+Common ZTNA products that follow this broker model:
+
+- **Zscaler Private Access (ZPA)** — the most widely deployed
+  enterprise ZTNA product; uses Zscaler cloud as the broker
+  and a lightweight App Connector installed on-premises
+- **Cloudflare Access** — uses Cloudflare's global network
+  as the broker; connector is called cloudflared
+- **Microsoft Entra Private Access** — Microsoft's own ZTNA
+  product, integrated with Entra ID and the Global Secure
+  Access client
+
+If the organisation does not have a ZTNA product, remote
+devices can alternatively reach the Certificate Connector
+via a corporate VPN — the connector only requires internal
+network reachability, however that is achieved. ZTNA is the
+preferred approach because it provides application-level
+access rather than full network access, which aligns with
+Zero Trust principles.
 
 ---
 
