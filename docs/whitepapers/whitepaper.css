@@ -1,207 +1,173 @@
 /* ============================================================
-   Whitepaper stylesheet — screen and print
+   Whitepaper stylesheet — windows-endpoint-security-patterns
    ============================================================ */
 
-/* --- Reset & base ----------------------------------------- */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-}
-
+/* Page and base typography */
 body {
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #1a1a1a;
-  background: #ffffff;
-  max-width: 820px;
-  margin: 0 auto;
-  padding: 2.5rem 2.5rem 4rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1a1a1a;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem 3rem;
+    background: #ffffff;
 }
 
-/* --- Cover block ------------------------------------------ */
-.cover {
-  text-align: center;
-  padding: 4rem 2rem 3rem;
-  border-bottom: 3px solid #1a237e;
-  margin-bottom: 3rem;
-  page-break-after: always;
+/* Cover block */
+header#title-block-header {
+    display: none;
 }
 
-.cover h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1a237e;
-  line-height: 1.25;
-  margin-bottom: 0.75rem;
+/* Headings */
+h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #0d1b2a;
+    margin-top: 0;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+    border-bottom: 3px solid #1a3a5c;
+    padding-bottom: 0.5rem;
 }
 
-.cover .subtitle {
-  font-size: 1.1rem;
-  color: #455a64;
-  font-style: italic;
-  margin-bottom: 2.5rem;
+h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1a3a5c;
+    margin-top: 2.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #ccd6e0;
+    padding-bottom: 0.3rem;
 }
 
-.cover table {
-  margin: 0 auto;
-  border: none;
-  font-size: 0.95rem;
+h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c4a6e;
+    margin-top: 1.5rem;
+    margin-bottom: 0.4rem;
 }
 
-.cover table td {
-  border: none;
-  padding: 0.2rem 0.75rem;
-  color: #37474f;
+/* Subtitle */
+h2:first-of-type {
+    font-size: 1.1rem;
+    color: #4a6080;
+    font-weight: 400;
+    font-style: italic;
+    border-bottom: none;
+    margin-top: 0.25rem;
 }
 
-.cover table td:first-child {
-  font-weight: 600;
-  color: #1a237e;
-  text-align: right;
-}
-
-/* --- Headings --------------------------------------------- */
-h1, h2, h3, h4 {
-  font-weight: 700;
-  line-height: 1.25;
-  color: #1a237e;
-  margin-top: 2.25rem;
-  margin-bottom: 0.75rem;
-}
-
-h1 { font-size: 1.85rem; border-bottom: 2px solid #1a237e; padding-bottom: 0.4rem; }
-h2 { font-size: 1.4rem;  border-bottom: 1px solid #c5cae9; padding-bottom: 0.3rem; }
-h3 { font-size: 1.1rem;  color: #283593; }
-h4 { font-size: 1rem;    color: #37474f; font-weight: 600; }
-
-/* --- Paragraphs & lists ----------------------------------- */
-p { margin-bottom: 1rem; }
-
-ul, ol {
-  margin: 0.5rem 0 1rem 1.5rem;
-}
-
-li { margin-bottom: 0.35rem; }
-
-/* --- Blockquotes ------------------------------------------ */
-blockquote {
-  border-left: 4px solid #3949ab;
-  background: #e8eaf6;
-  margin: 1.25rem 0;
-  padding: 0.85rem 1.25rem;
-  border-radius: 0 4px 4px 0;
-  color: #1a237e;
-  font-size: 0.95rem;
-}
-
-blockquote p { margin-bottom: 0; }
-
-/* --- Tables ----------------------------------------------- */
+/* Cover metadata table */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.25rem 0;
-  font-size: 0.9rem;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 10.5pt;
 }
 
-th {
-  background: #1a237e;
-  color: #ffffff;
-  font-weight: 600;
-  padding: 0.6rem 0.85rem;
-  text-align: left;
+table td {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid #dde3ea;
+    vertical-align: top;
 }
 
-td {
-  padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid #e0e0e0;
-  vertical-align: top;
+table td:first-child {
+    font-weight: 600;
+    color: #1a3a5c;
+    background-color: #f0f4f8;
+    width: 30%;
 }
 
-tr:nth-child(even) td { background: #f5f5f5; }
-tr:hover td { background: #e8eaf6; }
+/* Horizontal rules */
+hr {
+    border: none;
+    border-top: 1px solid #dde3ea;
+    margin: 2rem 0;
+}
 
-/* --- Code ------------------------------------------------- */
+/* Paragraphs */
+p {
+    margin: 0.75rem 0;
+}
+
+/* Blockquotes — used for callouts and notes */
+blockquote {
+    border-left: 4px solid #1a3a5c;
+    background: #f0f4f8;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0 4px 4px 0;
+}
+
+blockquote p {
+    margin: 0.25rem 0;
+    font-size: 10.5pt;
+    color: #2c4a6e;
+}
+
+/* Lists */
+ul, ol {
+    padding-left: 1.75rem;
+    margin: 0.5rem 0;
+}
+
+li {
+    margin: 0.4rem 0;
+}
+
+/* Code and inline code */
 code {
-  font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
-  font-size: 0.875rem;
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 3px;
-  padding: 0.1em 0.35em;
-  color: #c62828;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 9.5pt;
+    background: #f0f4f8;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    color: #1a3a5c;
 }
 
 pre {
-  background: #263238;
-  color: #eceff1;
-  border-radius: 6px;
-  padding: 1.1rem 1.25rem;
-  overflow-x: auto;
-  margin: 1.25rem 0;
-  font-size: 0.85rem;
-  line-height: 1.55;
+    background: #f0f4f8;
+    padding: 1rem 1.25rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    border-left: 3px solid #1a3a5c;
 }
 
-pre code {
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
-}
-
-/* --- Horizontal rule -------------------------------------- */
-hr {
-  border: none;
-  border-top: 1px solid #c5cae9;
-  margin: 2rem 0;
-}
-
-/* --- Mermaid diagrams ------------------------------------- */
+/* Mermaid diagram container */
 .mermaid {
-  text-align: center;
-  margin: 1.5rem 0;
-  padding: 1.25rem;
-  background: #fafafa;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  overflow-x: auto;
+    text-align: center;
+    margin: 2rem 0;
 }
 
-/* --- Executive summary callout ---------------------------- */
-h2 + p em, h2 + p strong {
-  display: inline;
+/* Strong */
+strong {
+    color: #0d1b2a;
 }
 
-/* --- Print / PDF ------------------------------------------ */
+/* Print styles */
 @media print {
-  body {
-    max-width: 100%;
-    padding: 0;
-    font-size: 11pt;
-    color: #000000;
-  }
-
-  h1, h2, h3, h4 { color: #000080; page-break-after: avoid; }
-  h2 { page-break-before: auto; }
-
-  pre, blockquote, table, .mermaid { page-break-inside: avoid; }
-
-  a { color: #000080; text-decoration: none; }
-  a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
-
-  .cover { page-break-after: always; border-bottom: 2pt solid #000080; }
-
-  @page {
-    margin: 2cm 2.5cm;
-    @bottom-center {
-      content: counter(page);
-      font-size: 9pt;
-      color: #555;
+    body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 10.5pt;
     }
-  }
+
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.1rem; page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+
+    table, blockquote, pre {
+        page-break-inside: avoid;
+    }
+
+    hr {
+        border-top: 1px solid #ccd6e0;
+    }
+
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
 }
