@@ -51,7 +51,7 @@ to all four sections.
 - [x] Pattern 04 SCEP Internal NDES — create from scratch
 - [x] Pattern 04 SCEP diagram — ZTNA session terminology, colour coding, PKI trust chain
 - [x] Pattern 04 SCEP diagram — simplified TD layout, NDES internal boundary, ZTNA subsection added
-- [ ] Root README updated for all four patterns
+- [x] Root README updated for all four patterns
 - [ ] Whitepaper 01 BTG — markdown + PDF
 - [ ] Whitepaper 02 SCEP — markdown + PDF
 - [ ] GitHub Releases for both whitepapers

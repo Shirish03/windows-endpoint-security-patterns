@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.3.0] — 2026-06-12
+
+### Changed
+- All four pattern READMEs restructured to four-layer Option B format
+- Strategic Overview added to all patterns
+- Operational Guidance added to all patterns
+- Pattern 04 SCEP created from scratch
+
+### Fixed
+- GitHub Actions workflow moved to correct root location
+- Task XML event channel name corrected
+- Pattern 03 duplicate H1 removed
+
+---
+
 ## [Unreleased]
 
 ### Added
