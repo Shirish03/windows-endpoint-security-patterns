@@ -162,6 +162,11 @@ strong {
         page-break-inside: avoid;
     }
 
+    figure {
+        page-break-inside: avoid;
+        page-break-before: auto;
+    }
+
     hr {
         border-top: 1px solid #ccd6e0;
     }
