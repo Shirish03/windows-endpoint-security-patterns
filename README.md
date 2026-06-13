@@ -37,6 +37,12 @@ and where the answer to a security gap is not always "wait for a platform update
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
 
+## Published Reference Architectures
+
+| Whitepaper | Description | Download |
+|---|---|---|
+| BitLocker-to-Go Escrow — Hybrid Entra ID | Silent escrow failure and event-driven remediation architecture | [v1.0 PDF ↗](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
+
 ## Engineering Philosophy
 
 - **Event-driven over polling.** Platform signals — Windows event logs, API
