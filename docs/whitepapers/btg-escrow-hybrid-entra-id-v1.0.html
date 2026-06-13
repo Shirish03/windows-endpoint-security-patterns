@@ -29,33 +29,6 @@
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
   <link rel="stylesheet" href="whitepaper.css" />
-  <style>
-  /* Inject mermaid diagram container styling via header so it loads with the document */
-  .mermaid { text-align: center; margin: 1.5rem 0; }
-  </style>
-  <script>
-  /* Convert pandoc-generated <pre><code class="language-mermaid"> to <div class="mermaid">
-     so Mermaid.js can render the diagrams. Runs before mermaid.initialize(). */
-  document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("pre > code.language-mermaid").forEach(function (code) {
-      var div = document.createElement("div");
-      div.className = "mermaid";
-      div.textContent = code.textContent;
-      code.parentNode.replaceWith(div);
-    });
-  });
-  </script>
-  <script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: {
-    primaryColor: "#e8eaf6",
-    primaryBorderColor: "#3949ab",
-    primaryTextColor: "#1a237e",
-    lineColor: "#5c6bc0",
-    secondaryColor: "#f3e8fd",
-    tertiaryColor: "#e6f4ea"
-  }});
-  </script>
 </head>
 <body>
 <header id="title-block-header">
@@ -246,51 +219,17 @@ relationships already present on the endpoint. No new infrastructure is
 introduced, no credentials are handled by the solution, and no
 background agents are required.</p>
 <h3 id="architecture-flow">Architecture Flow</h3>
-<pre class="mermaid"><code>flowchart TB
-    classDef success fill:#d4edda,stroke:#28a745,color:#155724
-    classDef failure fill:#f8d7da,stroke:#dc3545,color:#721c24
-    classDef warning fill:#fff3cd,stroke:#ffc107,color:#856404
-
-    A[&quot;User enables BitLocker\non removable USB drive&quot;]
-    B[&quot;Windows attempts recovery\nkey backup to Entra ID&quot;]
-    C[&quot;✅ Key escrowed\nEvent ID 845 logged&quot;]:::success
-    D[&quot;Windows logs Event ID 846\nMicrosoft-Windows-BitLocker-API/Management\nLevel 3 — Warning&quot;]
-    E[&quot;Event-triggered scheduled task\nfires within 30 seconds\nSYSTEM context&quot;]
-    F[&quot;BTG_RecoveryKey_Escrow_Retry.ps1\nexecutes as SYSTEM&quot;]
-    G{&quot;BackupToAAD cmdlet\navailable on device?&quot;}
-    H[&quot;❌ Exit 1\nDevice lacks required module\nLogged to ProgramData&quot;]:::failure
-    I{&quot;Event age\n≤ 10 minutes?&quot;}
-    J[&quot;⏭ Exit 0\nStale event logged\nNo action taken&quot;]
-    K[&quot;Extract drive letter from event message\nRegex: volume\\s+[A-Z]:&quot;]
-    L{&quot;Drive letter\nextracted?&quot;}
-    M[&quot;❌ Log parse failure\nRaw message captured\nfor diagnostics&quot;]:::warning
-    N[&quot;Get-BitLockerVolume\nFind RecoveryPassword\nprotectors on volume&quot;]
-    O{&quot;RecoveryPassword\nprotectors found?&quot;}
-    P[&quot;❌ Exit 1\nNo protectors on volume\nLogged&quot;]:::failure
-    Q[&quot;For each protector\nNormalize GUID format\nAttempt BackupToAAD&quot;]
-    R{&quot;Escrow\nresult?&quot;}
-    S[&quot;✅ Exit 0\nKey escrowed to Entra ID\nTimestamp logged&quot;]:::success
-    T[&quot;⚠ Log exception\nContinue to next\nprotector if any&quot;]:::warning
-
-    A --&gt; B
-    B --&gt;|Success| C
-    B --&gt;|Failure| D
-    D --&gt; E
-    E --&gt; F
-    F --&gt; G
-    G --&gt;|No| H
-    G --&gt;|Yes| I
-    I --&gt;|Stale — skip| J
-    I --&gt;|Recent — proceed| K
-    K --&gt; L
-    L --&gt;|No match| M
-    L --&gt;|Matched| N
-    N --&gt; O
-    O --&gt;|None| P
-    O --&gt;|Found| Q
-    Q --&gt; R
-    R --&gt;|Success| S
-    R --&gt;|Exception| T</code></pre>
+<figure>
+<img src="btg-flow-diagram.png"
+     alt="BTG Escrow Architecture Flow"
+     style="max-width:100%;height:auto;display:block;
+            margin:1.5rem auto;border:1px solid #dde3ea;
+            border-radius:4px;padding:0.5rem;" />
+<figcaption style="text-align:center;font-size:9.5pt;
+             color:#4a6080;margin-top:0.5rem;">
+Figure 1 — BitLocker-to-Go Escrow Retry Flow
+</figcaption>
+</figure>
 <blockquote>
 <p>Color guide: green nodes = success paths, red = terminal failures,
 amber = logged errors with continuation.</p>
