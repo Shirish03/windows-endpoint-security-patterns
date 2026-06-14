@@ -7,7 +7,7 @@
 |---|---|
 | **Version** | 1.0 |
 | **Author** | Shirish Mistry |
-| | Associate Principal — Endpoint & Security Architecture |
+| | Associate Principal, Endpoint & Security Architecture |
 | **Date** | June 2026 |
 | **Repository** | github.com/Shirish03/windows-endpoint-security-patterns |
 
@@ -20,7 +20,7 @@ automatically back up recovery keys to Entra ID, ensuring administrators
 can recover data if a drive is lost or a user forgets their password.
 On devices that are Hybrid Entra ID joined and managed through Intune,
 this backup step silently fails. No alert is raised, no user is notified,
-and the device reports as compliant — but the recovery key was never
+and the device reports as compliant, but the recovery key was never
 stored.
 
 The result is a fleet of encrypted removable drives with no administrative
@@ -44,12 +44,12 @@ on-premises. The most common transitional state is Hybrid Entra ID join:
 devices are joined to on-premises Active Directory, registered in
 Microsoft Entra ID, and managed through a combination of Group Policy
 and Microsoft Intune. This configuration unlocks cloud management
-capabilities — conditional access, Intune policy delivery, Autopilot
-provisioning — without requiring a full migration away from on-premises
+capabilities (conditional access, Intune policy delivery, Autopilot
+provisioning) without requiring a full migration away from on-premises
 directory infrastructure.
 
-BitLocker-to-Go — the variant of BitLocker that encrypts removable USB
-drives rather than OS volumes — is expected to behave consistently with
+BitLocker-to-Go, the variant of BitLocker that encrypts removable USB
+drives rather than OS volumes, is expected to behave consistently with
 OS drive BitLocker in this configuration. Group Policy and Intune CSP
 settings exist to require recovery key backup to Entra ID. They deploy
 without error. They appear in compliance reports. And on Hybrid Entra ID
@@ -67,8 +67,8 @@ standard configuration management tooling.
 
 Hybrid Entra ID join is the dominant configuration in enterprise Windows
 estates undergoing cloud modernisation. Organisations that have not yet
-completed a full Entra ID-only migration — which describes the majority
-of mid-to-large enterprises at any given point in that journey — are
+completed a full Entra ID-only migration, which describes the majority
+of mid-to-large enterprises at any given point in that journey, are
 operating devices in this configuration. Any of those devices on which
 a user encrypts a removable USB drive is subject to this failure.
 
@@ -92,7 +92,7 @@ suspect the control is not functioning.
 
 Windows generates Event ID 846 in the
 `Microsoft-Windows-BitLocker-API/Management` log when recovery key backup
-fails. This event is classified as Level 3 — Warning, not Error. Standard
+fails. This event is classified as Level 3: Warning, not Error. Standard
 Windows event monitoring configurations typically alert on Error-level
 events and treat Warning-level events as informational. Event ID 846 does
 not appear in Intune compliance reports, is not surfaced in the Intune
@@ -109,7 +109,7 @@ without detection.
 
 ### Data Protection and Recovery Key Escrow
 
-Recovery key escrow is not an administrative convenience — it is the
+Recovery key escrow is not an administrative convenience; it is the
 mechanism that makes encrypted data recoverable. When escrow silently
 fails, the organisation holds encrypted removable drives with no
 administrative path to recovery. A single hardware failure, forgotten
@@ -123,8 +123,8 @@ population.
 The Group Policy and Intune configurations that require recovery key
 backup to Entra ID may be correctly deployed and will appear compliant
 during a policy review. The failure is behavioural, not configurational.
-An assessor validating the control end-to-end — by checking whether
-recovery keys are actually present in Entra ID for enrolled devices —
+An assessor validating the control end-to-end, by checking whether
+recovery keys are actually present in Entra ID for enrolled devices,
 would find the keys absent. The control is configured but not
 functioning. This is a more significant finding than a missing policy,
 because it demonstrates a gap between documented controls and effective
@@ -169,8 +169,8 @@ should assess applicability to their specific obligations.
 
 ### How the Compensating Control Works
 
-The solution treats Windows Event ID 846 — the platform's own recovery
-key backup failure signal — as a deterministic trigger for an automated
+The solution treats Windows Event ID 846, the platform's own recovery
+key backup failure signal, as a deterministic trigger for an automated
 retry. When BitLocker-to-Go fails to back up a recovery key, Windows
 logs this event. An event-triggered scheduled task detects it within
 30 seconds and invokes a PowerShell script that retries the escrow
@@ -236,7 +236,7 @@ flowchart TB
 
 ### Component Roles
 
-**Event ID 846 — the trigger**
+**Event ID 846: the trigger**
 Windows emits this event when BitLocker-to-Go fails to back up a
 recovery key to Entra ID. The event includes the affected drive letter
 and is logged to the `Microsoft-Windows-BitLocker-API/Management` channel.
@@ -247,14 +247,14 @@ rather than noise to suppress.
 A scheduled task registered on the endpoint fires within 30 seconds of
 Event ID 846. It executes under the SYSTEM context, ensuring consistent
 behaviour regardless of the user session state, and invokes the
-PowerShell escrow script. The task performs no logic itself — it is a
+PowerShell escrow script. The task performs no logic itself; it is a
 native dispatcher.
 
 **PowerShell escrow script**
 The script parses the triggering event, extracts the affected drive
 letter, identifies RecoveryPassword key protectors on the volume, and
 retries the Entra ID backup using the `BackupToAAD-BitLockerKeyProtector`
-cmdlet. Every execution step — success or failure — is logged with
+cmdlet. Every execution step, success or failure, is logged with
 timestamp and context. No recovery key material is written to any log.
 
 **Entra ID**
@@ -263,8 +263,8 @@ escrow operation. The script does not handle credentials or tenant
 identifiers. If the retry succeeds, the recovery key is visible in the
 Entra ID portal under the device record.
 
-For full implementation detail — deployment steps, scheduled task
-configuration, script parameters, and validation — refer to the
+For full implementation detail (deployment steps, scheduled task
+configuration, script parameters, and validation), refer to the
 [GitHub pattern](https://github.com/Shirish03/windows-endpoint-security-patterns/tree/main/patterns/hybrid-entra-btg-key-escrow-pattern).
 
 ---
@@ -284,13 +284,13 @@ the polling window.
 The event-driven approach has none of these properties. It executes only
 when a failure is detected, responds within 30 seconds, and has zero
 overhead on devices that are not experiencing escrow failures. The
-platform already emits a reliable failure signal — the design choice is
+platform already emits a reliable failure signal; the design choice is
 whether to act on it.
 
 ### Compensating Control Over Platform Replacement
 
 The solution does not replace or modify the native BitLocker escrow
-mechanism. It operates as a compensating control — a secondary measure
+mechanism. It operates as a compensating control, a secondary measure
 that detects and responds to native mechanism failures. This means the
 native mechanism remains in place and may succeed on its own in some
 scenarios; the compensating control only activates when it does not.
@@ -311,8 +311,8 @@ responds within 30 seconds and executes locally.
 
 **Repeated retry loops** were considered and rejected. A single retry
 per triggering event is sufficient: if the retry fails, the failure is
-logged with full context, and the next Event ID 846 — triggered if the
-user re-enables BitLocker — will initiate a fresh attempt. Repeated
+logged with full context, and the next Event ID 846, triggered if the
+user re-enables BitLocker, will initiate a fresh attempt. Repeated
 retries introduce log flooding risk and unpredictable behaviour under load.
 
 **Agent-based solutions** that introduce new software or persistent
@@ -323,20 +323,20 @@ to operate within the platform's existing boundaries ruled them out.
 
 ## 5. Operational Considerations
 
-Full operational guidance — monitoring, failure detection, log locations,
-and lifecycle considerations — is documented in the
+Full operational guidance (monitoring, failure detection, log locations,
+and lifecycle considerations) is documented in the
 [Operational Guidance section](https://github.com/Shirish03/windows-endpoint-security-patterns/tree/main/patterns/hybrid-entra-btg-key-escrow-pattern#operational-guidance)
 of the GitHub pattern.
 
 In production, the primary signals to monitor are:
 
-- **Event ID 845** following Event ID 846 on the same device — confirms
+- **Event ID 845** following Event ID 846 on the same device: confirms
   the retry succeeded
-- **Scheduled task last run result** — should be `0x0` in Task Scheduler
+- **Scheduled task last run result**: should be `0x0` in Task Scheduler
 - **Script log file** at
-  `C:\ProgramData\BitLocker\Logs\BTG_RecoveryKey_Escrow_Retry.log` —
+  `C:\ProgramData\BitLocker\Logs\BTG_RecoveryKey_Escrow_Retry.log`:
   records each execution with timestamp, drive letter, and outcome
-- **Entra ID device record** — recovery keys should be present for all
+- **Entra ID device record**: recovery keys should be present for all
   devices that have had removable drives encrypted
 
 The solution requires no certificate renewal, no ongoing credential
@@ -367,14 +367,14 @@ a baseline security measure rather than an optional enhancement.
 
 ## 7. Further Reading
 
-**GitHub pattern — full implementation reference**
-The complete implementation — deployment scripts, scheduled task XML,
-validation steps, and operational guidance — is available at:
+**GitHub pattern: full implementation reference**
+The complete implementation (deployment scripts, scheduled task XML,
+validation steps, and operational guidance) is available at:
 github.com/Shirish03/windows-endpoint-security-patterns/tree/main/patterns/hybrid-entra-btg-key-escrow-pattern
 
 **Microsoft documentation**
 - Microsoft Learn: BitLocker overview and recovery key management
-- Microsoft Learn: Intune device configuration — BitLocker settings
+- Microsoft Learn: Intune device configuration, BitLocker settings
 - Microsoft Learn: Entra ID device management and BitLocker key recovery
 - Windows Event Log reference: Microsoft-Windows-BitLocker-API/Management
 
