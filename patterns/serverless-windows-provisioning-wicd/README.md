@@ -60,6 +60,27 @@ own. USB-based re-imaging, manual setup, or community scripts fill the
 gap, without the security controls, audit trail, or change management
 that a governed provisioning approach provides.
 
+**Framework alignment**
+Several widely adopted frameworks address the requirement for consistent,
+verifiable device configuration at the point of provisioning:
+
+- **NIST CSF Protect function (PR.IP-1)** requires that a baseline
+  configuration is established and maintained for all managed systems. A
+  provisioning process that varies by technician or by deployment
+  scenario cannot produce a consistent, auditable baseline.
+- **CIS Control 4** (Secure Configuration of Enterprise Assets and
+  Software) requires that secure configurations are established and
+  actively managed. Provisioning packages enforce this at setup time,
+  before the device enters the estate.
+- **ISO/IEC 27001 Annex A 8.9** (Configuration management) requires
+  that configurations of hardware and software are established,
+  documented, and maintained. A versioned, signed provisioning package
+  is a directly auditable configuration artifact for this control.
+
+This document does not constitute legal or compliance advice; organisations
+should assess applicability to their specific regulatory and contractual
+obligations independently.
+
 ---
 
 ### Architectural Recommendation
@@ -252,6 +273,14 @@ Review for any provisioning errors during OOBE.
 
 ---
 
+### Repository Contents
+
+| File | Purpose |
+|---|---|
+| `docs/provisioning-flow.md` | Step-by-step walkthrough of the WICD provisioning flow from package creation through OOBE to first login; includes per-component runtime behaviour notes and failure handling |
+
+---
+
 ## Operational Guidance
 
 ### Package Versioning
@@ -330,6 +359,18 @@ device leaves the provisioning environment:
 Any failed check should be investigated and resolved before the device
 is issued. A device that passes all checks has a confirmed baseline and
 a recoverable encryption state.
+
+---
+
+### Dependencies
+
+| Dependency | Notes |
+|---|---|
+| Windows ADK with WICD | Required on the authoring machine only; not installed on provisioned devices; ADK version should match or exceed the target Windows build |
+| TPM | Required for BitLocker encryption during OOBE; devices without a functional TPM will not encrypt unless the provisioning package includes a policy exception |
+| Entra ID connectivity | Required at OOBE time if the package includes Entra ID join; devices provisioned offline must complete the join step manually post-setup via Settings |
+| Signed provisioning package | Recommended for production use; unsigned packages may trigger a UAC prompt during OOBE or be blocked by policy |
+| Windows installation USB | The provisioning package must be at the root of the installation USB or on a secondary USB presented during OOBE; placement elsewhere will prevent detection |
 
 ---
 
