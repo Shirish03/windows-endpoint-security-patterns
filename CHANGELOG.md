@@ -25,7 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - Mermaid diagrams for all three patterns replacing ASCII art
 - Decision matrix for WICD pattern (When to Use This Pattern section)
-- CLAUDE.md project context and session protocol
+- Project context file for local session continuity
 - Pester 5 test suite for BTG escrow retry script
 - README badges for lint status and license
 - `docs/why-patterns-not-scripts.md` engineering philosophy essay
