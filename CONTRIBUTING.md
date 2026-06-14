@@ -1,7 +1,7 @@
 # Contributing
 
 This is a solo portfolio repository documenting real-world endpoint security
-patterns. It is not a maintained open source project — there is no roadmap,
+patterns. It is not a maintained open source project; there is no roadmap,
 no issue SLA, and no guarantee of response time. That said, practical
 contributions grounded in real environment experience are welcome.
 
@@ -30,7 +30,7 @@ Pattern suggestions without a clear problem statement will not be prioritized.
 ## Code standards for script contributions
 
 - `[CmdletBinding()]` on all scripts
-- Structured logging to a consistent path — no `Write-Host` as the sole output
+- Structured logging to a consistent path: no `Write-Host` as the sole output
 - `exit 0` / `exit 1` instead of bare `return` at script scope
 - `try/catch/finally` wrapping all execution paths
 - PSScriptAnalyzer clean at Error severity

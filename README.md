@@ -13,7 +13,7 @@ and cloud-managed Windows environments.
 During enterprise endpoint modernization, several security controls that worked
 reliably in on-premises AD environments either broke silently or had no supported
 equivalent in Hybrid Entra ID and Intune-managed configurations. BitLocker-to-Go
-recovery key escrow was one such control — policy was correctly configured, no
+recovery key escrow was one such control; policy was correctly configured, no
 errors surfaced in Intune, and failures were only visible if you knew which
 Windows event log to watch. This repository documents those gaps and the
 event-driven, operationally practical approaches used to close them without
@@ -22,7 +22,7 @@ introducing new infrastructure or weakening the platform's security model.
 ## Who This Is For
 
 Endpoint engineers, SecOps practitioners, and Intune/Entra administrators
-operating in hybrid or transitional Windows environments — where devices are
+operating in hybrid or transitional Windows environments, where devices are
 Entra ID joined but not fully cloud-native, where Group Policy and Intune coexist,
 and where the answer to a security gap is not always "wait for a platform update."
 
@@ -41,12 +41,12 @@ Each pattern in this repository is structured in four layers to serve different 
 
 | Whitepaper | Description | Download |
 |---|---|---|
-| BitLocker-to-Go Escrow — Hybrid Entra ID | Silent escrow failure and event-driven remediation architecture | [v1.0 PDF ↗](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
+| BitLocker-to-Go Escrow: Hybrid Entra ID | Silent escrow failure and event-driven remediation architecture | [v1.0 PDF ↗](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
 
 ## Engineering Philosophy
 
-- **Event-driven over polling.** Platform signals — Windows event logs, API
-  failure codes, observable state changes — are the trigger point. Scripts run
+- **Event-driven over polling.** Platform signals (Windows event logs, API
+  failure codes, observable state changes) are the trigger point. Scripts run
   in response to verified conditions, not on a schedule.
 - **Patterns and design decisions over turnkey scripts.** Each entry documents
   why a particular approach was taken, what platform behavior it relies on, and
@@ -76,13 +76,13 @@ outside this context.
 
 Each pattern lives in its own folder under `patterns/` and is self-contained:
 
-- **README.md** — background, problem statement, and solution overview
-- **docs/** — detailed architecture and design documentation
-- **scripts/** — PowerShell implementation where applicable
-- **examples/** — sanitized samples and illustrative output where applicable
-- **tests/** — Pester unit tests where applicable
+- **README.md**: background, problem statement, and solution overview
+- **docs/**: detailed architecture and design documentation
+- **scripts/**: PowerShell implementation where applicable
+- **examples/**: sanitized samples and illustrative output where applicable
+- **tests/**: Pester unit tests where applicable
 
 Start with the pattern README to understand the design context before reading
-the scripts. Each implementation will require adaptation — environment-specific
+the scripts. Each implementation will require adaptation: environment-specific
 paths, policy targeting, and validation in a controlled environment before
 production use.

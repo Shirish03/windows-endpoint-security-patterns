@@ -29,14 +29,14 @@ and failure handling.
 Sysmon's detection coverage is only as current as its configuration. In
 environments where configuration updates are bundled with the Sysmon
 binary and delivered through software deployment pipelines, every
-detection improvement requires a software deployment cycle — introducing
+detection improvement requires a software deployment cycle, introducing
 lag, change management overhead, and an unnecessary coupling between two
 lifecycles. The binary changes rarely; the configuration should change
 frequently. Binding them together slows detection iteration without any
 security benefit.
 
-When a deployment fails silently — as software deployments sometimes do
-— the endpoint continues running an outdated configuration with no
+When a deployment fails silently, as software deployments sometimes do,
+the endpoint continues running an outdated configuration with no
 indication that the intended update was not applied.
 
 ---
@@ -71,9 +71,9 @@ control.
 Decouple Sysmon configuration delivery from binary deployment by
 treating the registry-backed configuration as the authoritative
 deployment artifact. Distribute updates via native Group Policy or Intune
-Policy CSP registry targeting — mechanisms already present in the
+Policy CSP registry targeting (mechanisms already present in the
 environment that report application status and operate independently of
-the software deployment pipeline.
+the software deployment pipeline).
 
 ---
 
@@ -87,8 +87,8 @@ connections, file system activity, and other system behaviours.
 
 While the Sysmon binary itself is typically deployed once and remains
 stable, its configuration defines what is observed and how events are
-generated. Detection strategies evolve over time — in response to new
-threats, operational changes, and tuning requirements — making Sysmon
+generated. Detection strategies evolve over time (in response to new
+threats, operational changes, and tuning requirements), making Sysmon
 configuration a living artifact that requires ongoing updates.
 
 In many environments, configuration updates are bundled with the Sysmon
@@ -107,7 +107,7 @@ compiled configuration to the registry:
 - **Value:** `Rules`
 - **Type:** `REG_BINARY`
 
-Sysmon reads from this registry representation at runtime — not from the
+Sysmon reads from this registry representation at runtime, not from the
 original XML file. This behaviour makes it possible to manage Sysmon
 configuration independently from the Sysmon binary, using native Windows
 policy delivery mechanisms.
@@ -156,7 +156,7 @@ flowchart TB
 |---|---|
 | **Decoupled lifecycles** | Configuration updates travel independently of binary deployment |
 | **Native mechanisms only** | Group Policy and Intune Policy CSP require no additional tooling or agents |
-| **Registry as source of truth** | The compiled registry value is the deployment artifact — not the XML file |
+| **Registry as source of truth** | The compiled registry value is the deployment artifact, not the XML file |
 | **Policy-cadence delivery** | Updates reach endpoints at standard policy refresh intervals |
 | **Auditable** | Policy application status is reported by the policy infrastructure; registry values are queryable at scale |
 
@@ -165,8 +165,8 @@ flowchart TB
 ### Design Trade-offs and Alternatives Considered
 
 **Why registry distribution rather than script-based deployment?**
-Script-based approaches — running `sysmon.exe -c config.xml` via a
-scheduled task or remote execution tool — reintroduce binary-style
+Script-based approaches (running `sysmon.exe -c config.xml` via a
+scheduled task or remote execution tool) reintroduce binary-style
 deployment dependencies: the script must run, the file must be present,
 and execution must succeed. Registry policy distribution uses
 infrastructure already operating in the environment with built-in
@@ -294,8 +294,8 @@ querying individual endpoints.
 
 ### Detecting Configuration Mismatch
 
-A Sysmon configuration mismatch — where the running configuration does
-not match the intended version — typically manifests as:
+A Sysmon configuration mismatch, where the running configuration does
+not match the intended version, typically manifests as:
 
 - **Unexpected events:** event types or process names appearing in logs
   that should be excluded by the current configuration
@@ -314,8 +314,8 @@ artifact, force a policy refresh and re-verify.
 ### Performance Monitoring for Large Configurations
 
 Binary registry values grow with configuration complexity. Very large
-Sysmon configurations — particularly those with extensive include/exclude
-rules — may marginally increase policy refresh duration on endpoints with
+Sysmon configurations, particularly those with extensive include/exclude
+rules, may marginally increase policy refresh duration on endpoints with
 slow disk I/O or constrained resources.
 
 Monitor policy refresh completion times after deploying a significantly
@@ -331,8 +331,8 @@ pipeline throughput after significant configuration changes.
 
 ### Rolling Back a Bad Configuration
 
-If a deployed configuration causes unexpected behaviour — excessive event
-volume, missing critical events, or endpoint performance impact — roll
+If a deployed configuration causes unexpected behaviour (excessive event
+volume, missing critical events, or endpoint performance impact), roll
 back by restoring the previous registry value:
 
 **Via Group Policy:**

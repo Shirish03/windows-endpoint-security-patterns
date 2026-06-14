@@ -171,5 +171,5 @@ exist on the endpoint. No new infrastructure is introduced, no credentials are
 handled, and each execution is bounded by a single discrete failure signal.
 
 That scope is deliberate. A compensating control that operates within the
-platform’s established boundaries — rather than around them — is auditable,
+platform’s established boundaries, rather than around them, is auditable,
 predictable, and safe to run at scale.

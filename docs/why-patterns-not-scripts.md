@@ -31,7 +31,7 @@ context in inline comments would be longer than the code. And even then, the
 comments would be read once and forgotten.
 
 The pattern document is where that reasoning lives. It exists so that the person
-operating this in a production environment — or adapting it for a different one —
+operating this in a production environment (or adapting it for a different one)
 understands what they're relying on, not just what the script does.
 
 ## Enterprise environments break scripts in ways labs don't
@@ -66,7 +66,7 @@ how to make. The entire pattern runs on the endpoint using components that are
 already present, already auditable, and already within the enterprise's change
 control boundary.
 
-That constraint — *no new infrastructure* — shaped every design decision. It's
+That constraint, *no new infrastructure*, shaped every design decision. It's
 not obvious from reading the script. It only makes sense if you understand that
 in most enterprise environments, adding infrastructure has a cost that dwarfs the
 cost of the security gap it's solving. The pattern document explains that
@@ -82,8 +82,8 @@ A pattern is more durable because it separates the *approach* from the
 preserved. The person making the change understands what they're trying to
 preserve, not just what they're trying to fix.
 
-This matters in endpoint security specifically because the platform — Windows,
-Intune, Entra ID — is not static. Behavior that is undocumented today gets
+This matters in endpoint security specifically because the platform (Windows,
+Intune, Entra ID) is not static. Behavior that is undocumented today gets
 documented, sometimes as a fix and sometimes as a breaking change. Patterns give
 you the context to evaluate those changes. Scripts just break.
 

@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [0.3.0] — 2026-06-12
+## [0.3.0] - 2026-06-12
 
 ### Changed
 - All four pattern READMEs restructured to four-layer Option B format

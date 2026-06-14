@@ -33,7 +33,7 @@ all need a secure provisioning path that does not depend on deployment
 infrastructure, cloud connectivity, or pre-registered hardware hashes.
 
 When no lightweight official path exists, the practical outcome is
-inconsistent provisioning — devices set up manually, with varying
+inconsistent provisioning: devices set up manually, with varying
 security baselines, by whoever is available. The risk is not that the
 wrong tool is used; it is that no governed process exists at all.
 
@@ -57,15 +57,15 @@ either go unprovisioned or are set up outside any governed process.
 **Shadow IT provisioning**
 When no official lightweight provisioning path exists, teams find their
 own. USB-based re-imaging, manual setup, or community scripts fill the
-gap — without the security controls, audit trail, or change management
+gap, without the security controls, audit trail, or change management
 that a governed provisioning approach provides.
 
 ---
 
 ### Architectural Recommendation
 
-Native Windows tooling — specifically the Windows Imaging and
-Configuration Designer (WICD) and provisioning packages — provides a
+Native Windows tooling, specifically the Windows Imaging and
+Configuration Designer (WICD) and provisioning packages, provides a
 viable, secure provisioning path without infrastructure dependency for
 environments where Autopilot or SCCM are not feasible. The approach
 applies encryption, security configuration, and identity join during
@@ -85,7 +85,7 @@ Provisioning Windows devices is often framed as a binary choice:
 
 In reality, many environments sit in between, or intentionally avoid
 adding infrastructure. Conventional provisioning assumes deployment
-servers, directory services, and persistent management infrastructure —
+servers, directory services, and persistent management infrastructure,
 none of which may exist in these scenarios.
 
 This pattern demonstrates how to provision devices securely and
@@ -132,7 +132,7 @@ flowchart TB
    security settings, and application installs
 2. Devices boot from prepared installation media (USB)
 3. Users complete Entra ID join during setup
-4. Security controls — BitLocker, VPN, Wi-Fi, compliance settings —
+4. Security controls (BitLocker, VPN, Wi-Fi, compliance settings)
    are applied automatically
 5. Device reaches a compliant and usable state without manual
    intervention
@@ -156,7 +156,7 @@ flowchart TB
 ### Design Trade-offs and Alternatives Considered
 
 **Why WICD rather than manual setup?**
-Manual setup is inconsistent by nature — each technician makes
+Manual setup is inconsistent by nature; each technician makes
 different choices, and there is no audit trail for the configuration
 applied. WICD packages define configuration as code, applied
 deterministically at every provisioning event.
@@ -203,17 +203,17 @@ than the target Windows build.
 Open WICD and create a new project targeting the appropriate Windows
 edition and architecture. Configure the relevant settings:
 
-- **Account management** — Entra ID join settings if applicable
-- **Security settings** — BitLocker, password policy, screen lock
-- **Certificates** — trusted root certificates if required
-- **Wi-Fi profiles** — pre-configured network profiles
-- **Applications** — silent install packages if needed
+- **Account management**: Entra ID join settings if applicable
+- **Security settings**: BitLocker, password policy, screen lock
+- **Certificates**: trusted root certificates if required
+- **Wi-Fi profiles**: pre-configured network profiles
+- **Applications**: silent install packages if needed
 
 **3. Export the provisioning package**
 
 Export the project as a `.ppkg` file. Sign the package if the
 environment requires signed provisioning packages (recommended for
-production use). Record the package version in the filename — see
+production use). Record the package version in the filename. See
 [Operational Guidance → Package Versioning](#package-versioning).
 
 **4. Place the package on installation media**
@@ -299,7 +299,7 @@ Install-ProvisioningPackage -PackagePath "D:\WICD-Provisioning-v1.3-20260601.ppk
 
 ### Physical Security for USB Distribution
 
-The provisioning USB is a sensitive artifact — it defines the security
+The provisioning USB is a sensitive artifact; it defines the security
 baseline for every device it touches. Treat it accordingly:
 
 - Maintain a physical log of how many USBs have been produced, who

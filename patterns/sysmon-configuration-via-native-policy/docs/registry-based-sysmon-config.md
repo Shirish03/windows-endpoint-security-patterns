@@ -22,7 +22,7 @@ Sysmon configuration rules are stored at:
   `REG_BINARY`
 
 The `Rules` value contains the compiled representation of the Sysmon configuration.
-Sysmon reads from this value at runtime — changes to the registry value take effect
+Sysmon reads from this value at runtime; changes to the registry value take effect
 without restarting the Sysmon service or redeploying the binary.
 
 ---
@@ -43,9 +43,9 @@ the compiled registry value as a deployment artifact:
 
 The script writes two files to the output path:
 
-- **`SysmonRules-<timestamp>.reg`** — the registry artifact in standard `.reg` format,
+- **`SysmonRules-<timestamp>.reg`**: the registry artifact in standard `.reg` format,
   ready to reference when configuring a Group Policy Preferences registry item
-- **`SysmonRules-<timestamp>.txt`** — a deployment summary including SHA-256 hash,
+- **`SysmonRules-<timestamp>.txt`**: a deployment summary including SHA-256 hash,
   byte count, and the exact GPO field values to enter
 
 Diff successive `.reg` exports to review configuration changes before distributing
@@ -74,13 +74,13 @@ endpoints stay in sync with the reference system configuration.
 
 ## Benefits
 
-- **Decoupled lifecycles** — Sysmon binary and configuration updates are managed
+- **Decoupled lifecycles**: Sysmon binary and configuration updates are managed
   independently; a config change does not require a software deployment task
-- **Improved consistency** — configuration delivery uses the same reliable policy
+- **Improved consistency**: configuration delivery uses the same reliable policy
   refresh mechanism as all other managed registry settings
-- **Faster iteration** — detection logic can be updated at policy cadence without
+- **Faster iteration**: detection logic can be updated at policy cadence without
   waiting for redeployment cycles
-- **Reduced operational overhead** — no additional tooling, agents, or distribution
+- **Reduced operational overhead**: no additional tooling, agents, or distribution
   infrastructure beyond what already manages the endpoint
 
 ---
