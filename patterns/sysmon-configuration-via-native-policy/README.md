@@ -64,6 +64,27 @@ deployment records. Neither is reliable at scale. This creates an audit
 gap in environments where Sysmon configuration is a documented security
 control.
 
+**Framework alignment**
+Several widely adopted frameworks treat detection tool integrity and
+monitoring continuity as security control requirements:
+
+- **NIST CSF Detect function (DE.CM)** requires that the organisation
+  monitors for cybersecurity events across the environment. A Sysmon
+  configuration that is out of date or whose version cannot be confirmed
+  weakens the assurance that this monitoring is functioning as intended.
+- **NIST SP 800-137** (Information Security Continuous Monitoring)
+  addresses the requirement that monitoring mechanisms are maintained and
+  that their current state is verifiable. Configuration drift in a host
+  telemetry tool is a direct gap against this requirement.
+- **CIS Control 8** (Audit Log Management) includes the requirement that
+  logging tools are configured consistently and that their configuration
+  is maintained. Registry-based delivery provides a mechanism to enforce
+  and verify that consistency at scale.
+
+This document does not constitute legal or compliance advice; organisations
+should assess applicability to their specific regulatory and contractual
+obligations independently.
+
 ---
 
 ### Architectural Recommendation
@@ -180,15 +201,6 @@ managed independently of the primary telemetry pipeline.
 
 ---
 
-### Repository Contents
-
-| File | Purpose |
-|---|---|
-| `scripts/Export-SysmonRegistryConfig.ps1` | Extracts compiled Sysmon configuration from the registry on a reference system; writes a `.reg` file ready for GPO configuration; optionally imports XML before extraction |
-| `docs/registry-based-sysmon-config.md` | Detailed documentation covering the registry model, step-by-step approach, benefits, and operational considerations |
-
----
-
 ## Implementation Reference
 
 ### Environment Requirements
@@ -268,6 +280,15 @@ sysmon.exe -c
 ```
 
 This prints the active configuration summary without modifying it.
+
+---
+
+### Repository Contents
+
+| File | Purpose |
+|---|---|
+| `scripts/Export-SysmonRegistryConfig.ps1` | Extracts compiled Sysmon configuration from the registry on a reference system; writes a `.reg` file ready for GPO configuration; optionally imports XML before extraction |
+| `docs/registry-based-sysmon-config.md` | Detailed documentation covering the registry model, step-by-step approach, benefits, and operational considerations |
 
 ---
 
@@ -358,6 +379,33 @@ run `sysmon.exe -c` to confirm the previous configuration is active.
 Maintain a version-tagged archive of `.reg` artifacts from each
 configuration release to ensure previous versions are always available
 for rollback without requiring re-extraction from a reference system.
+
+---
+
+### Verification Artifacts
+
+This pattern produces no persistent log files. Verification relies on
+queryable artifacts and policy reporting mechanisms.
+
+| Artifact | Location | Purpose |
+|---|---|---|
+| Registry value | `HKLM\SYSTEM\CurrentControlSet\Services\SysmonDrv\Parameters\Rules` | Live configuration on the endpoint; compare against the reference `.reg` artifact to confirm the correct version is applied |
+| SHA-256 hash | `.txt` file written by `Export-SysmonRegistryConfig.ps1` at extraction time | Version identifier for the exported configuration; cross-reference against the endpoint registry value to confirm consistency |
+| GPO application status | `gpresult /r` on endpoint; Group Policy Management Console | Confirms the policy object has applied; a missing result indicates a targeting or replication issue |
+| Intune configuration report | Intune admin center, device configuration profile status | Confirms Policy CSP profile has applied; an error status indicates a delivery failure requiring investigation |
+| Runtime configuration | Output of `sysmon.exe -c` on endpoint | Confirms the configuration the Sysmon driver is actively using; use after a policy refresh to validate the registry update has been read |
+
+---
+
+### Dependencies
+
+| Dependency | Notes |
+|---|---|
+| Sysmon binary | Must be installed and running on all target endpoints; this pattern manages configuration delivery, not binary deployment |
+| SysmonDrv service | The Sysmon kernel driver reads the registry `Rules` value at runtime; if the service is stopped, configuration updates will not take effect until it is restarted |
+| Policy infrastructure | Group Policy (domain-joined) or Intune Policy CSP (Intune-managed) must be functioning and reaching the target endpoint population; policy delivery failures result in silent configuration drift |
+| Reference system | A Windows system with Sysmon installed is required to validate and extract configuration updates; it must run the same Sysmon version as the target endpoints to ensure binary compatibility of the exported registry value |
+| SHA-256 hash records | The extraction script produces a hash for each exported configuration; retaining these is the primary mechanism for verifying version consistency across the fleet |
 
 ---
 
