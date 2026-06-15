@@ -1,5 +1,5 @@
 # BitLocker-to-Go Recovery Key Escrow in Hybrid Entra ID Environments
-## A Reference Architecture for Closing Silent Endpoint Security Control Failures
+*A reference architecture for detecting and remediating silent recovery key escrow failures in Hybrid Entra ID environments*
 
 ---
 

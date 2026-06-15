@@ -150,7 +150,7 @@ flowchart TB
     end
 
     subgraph S2["② Registry extraction"]
-        C["HKLM\\SYSTEM\\CurrentControlSet\nServices\\SysmonDrv\\Parameters\nRules  —  REG_BINARY\nextracted as deployment artifact"]
+        C["HKLM\\SYSTEM\\CurrentControlSet\nServices\\SysmonDrv\\Parameters\nRules: REG_BINARY\nextracted as deployment artifact"]
     end
 
     subgraph S3["③ Policy distribution"]
