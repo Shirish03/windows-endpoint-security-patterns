@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.5.0] - 2026-06-19
+
 ### Added
 - CONTRIBUTING.md
 - CHANGELOG.md
@@ -14,6 +18,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Two-gate security model documented: Intune policy gate and internal DNS alias network gate, across pattern README, architecture-flow.md, and whitepaper markdown
 - ZTNA hop breakdown (steps 2a/2b/2c) and Domain Controller Kerberos/LDAP steps (5/7) added to architecture-flow.md
 - Component tables expanded to include Microsoft Entra ID, ZTNA broker, App Connector, Domain Controller, and Root CA
+- GitHub Releases published for whitepaper-btg-v1.0 and whitepaper-scep-v1.0
+- Root README.md download links updated to point to GitHub Release assets for both whitepapers
 
 ### Fixed
 - Root README.md Published Reference Architectures table: removed dead GitHub Release link
