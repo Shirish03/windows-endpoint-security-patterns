@@ -37,14 +37,14 @@ and where the answer to a security gap is not always "wait for a platform update
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
 
-## Published Reference Architectures
+## Reference Architecture Whitepapers
 
-Each whitepaper is available to read online in the repository or download as a formatted PDF.
+In-depth whitepapers expanding on selected patterns are available to read directly in this repository. Formatted PDF versions are planned; this table will be updated with download links once published as GitHub Releases.
 
-| Whitepaper | Read Online | Download |
+| Whitepaper | Read Online | PDF |
 |---|---|---|
-| BitLocker-to-Go Escrow: Hybrid Entra ID | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | [v1.0 PDF](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
-| Zero Trust Certificate Infrastructure | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.0.md) | PDF coming soon |
+| BitLocker-to-Go Escrow: Hybrid Entra ID | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | Not yet published |
+| Zero Trust Certificate Infrastructure | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.0.md) | Not yet published |
 
 ## Engineering Philosophy
 

@@ -25,15 +25,23 @@ organisation's internal PKI: a server that, if compromised, can be used
 to request certificates trusted by the environment's own authentication
 systems.
 
-The recommended architecture removes this exposure entirely. The Microsoft
-Intune Certificate Connector v2 acts as an outbound-only relay on an
-internal, domain-joined server, carrying certificate requests from the
-Intune cloud service to an NDES server with no internet connectivity.
-Intune enforces compliance posture before any certificate is issued; NDES
-validates a one-time challenge password for each request; and the CA
-applies its own template policy as a third independent check. No inbound
-firewall rules are required and the internal PKI remains fully inside the
-network perimeter.
+The recommended architecture removes this exposure entirely by enforcing
+two independent gates rather than one. The **policy gate**: only
+Intune-enrolled, compliant devices ever receive a SCEP profile. The
+**network gate**: the SCEP URL delivered in that profile is an internal
+DNS alias that resolves only inside the organisation's network and does
+not exist in public DNS, so the URL is useless to a host outside the
+perimeter even if it were obtained by other means. The Microsoft Intune
+Certificate Connector v2 acts as the outbound-only relay that makes this
+possible, carrying certificate requests from the Intune cloud service to
+an NDES server with no internet connectivity. Remote, off-network devices
+reach the same internal endpoint through a ZTNA broker session rather
+than a published endpoint, and the DMZ in this architecture is
+deliberately empty. NDES additionally validates a one-time challenge
+password for each request, the Domain Controller authenticates both NDES
+and the Issuing CA independently, and the CA applies its own template
+policy as a further check. No inbound firewall rules are required and
+the internal PKI remains fully inside the network perimeter.
 
 ---
 
@@ -176,96 +184,106 @@ should assess applicability to their specific obligations.
 The solution routes all Intune certificate enrollment requests through the
 Microsoft Intune Certificate Connector v2, installed on a domain-joined
 server inside the corporate network perimeter. NDES remains on an internal
-network segment with no inbound internet connectivity.
+network segment with no inbound internet connectivity, and the DMZ in
+this architecture is intentionally empty: there is no published endpoint
+for an attacker to find.
 
-When a managed device requests a certificate, Intune validates the device
-against compliance policies. For a compliant device, Intune issues a
-one-time challenge password and a SCEP URL pointing to the Certificate
-Connector. The connector maintains an outbound-only HTTPS connection to
-the Intune service; it receives the certificate request over that channel,
-validates it against Intune, forwards it to the internal NDES server, and
-returns the issued certificate to the device. No inbound firewall rules
-are required. NDES receives no direct internet traffic.
+Two independent gates protect every enrollment, enforced by different
+mechanisms:
 
-```mermaid
-flowchart TD
-    classDef cloud fill:#e8f0fe,stroke:#4285f4,color:#1a237e
-    classDef internal fill:#f3e8fd,stroke:#9334e6,color:#2a0050
-    classDef secure fill:#e6f4ea,stroke:#34a853,color:#1a4726
-    classDef device fill:#fff8e1,stroke:#fbbc04,color:#5f4200
+**Gate 1: Policy.** Only Intune-enrolled, compliant devices receive the
+SCEP profile in the first place. Intune evaluates compliance before
+issuing the SCEP URL and a one-time challenge password.
 
-    subgraph Internet["🌐 Internet"]
-        RemoteDevice["Remote Device\n(off-network)"]:::device
-    end
+**Gate 2: Network.** The SCEP URL is not a public endpoint. It is an
+internal DNS alias, a CNAME pointing at the Certificate Connector, that
+is registered only in the organisation's internal DNS zone and does not
+exist in public DNS. A device that obtained the URL without going
+through Intune would still be unable to resolve it from the internet.
 
-    subgraph Cloud["☁ Microsoft Cloud"]
-        Intune["Microsoft Intune\n(MDM + Compliance)"]:::cloud
-        ZTNA["ZTNA Broker\n(e.g. Zscaler, Cloudflare)"]:::cloud
-    end
+For on-network devices, the alias resolves directly and the SCEP request
+reaches the Connector over the LAN or corporate Wi-Fi. For remote,
+off-network devices, the request reaches the Connector through a ZTNA
+broker (such as Zscaler Private Access) and a paired App Connector
+running inside the network; the remote device never receives an IP
+address on the internal network and cannot reach anything beyond the one
+scoped endpoint. See [A Note on ZTNA](#a-note-on-ztna) below.
 
-    subgraph OrgNetwork["🏢 Organisation Network — NDES not reachable from internet"]
-        OnPremDevice["On-Prem Device\n(LAN / Wi-Fi)"]:::device
-        Connector["Certificate Connector v2\n(outbound-only to Intune)"]:::internal
-        NDES["NDES\n(internal only —\nnot internet-exposed)"]:::internal
-        CA["Certificate Authority"]:::secure
-    end
+The Connector maintains an outbound-only HTTPS connection to the Intune
+service; it validates each request against Intune, forwards it to the
+internal NDES server, and returns the issued certificate to the device.
+No inbound firewall rules are required at any point in the chain.
 
-    %% Profile delivery
-    Intune -->|"① Policy + SCEP URL"| OnPremDevice
-    Intune -->|"① Policy + SCEP URL"| RemoteDevice
+![SCEP NDES Architecture](images/scep-ndes-architecture.png)
 
-    %% On-network path
-    OnPremDevice -->|"② Certificate request"| Connector
+| Flow | Description |
+|---|---|
+| ① | Intune → all devices: MDM profile + internal SCEP URL |
+| ② | On-prem device → Certificate Connector: direct SCEP request |
+| ②a / ②b / ②c | Remote device → ZTNA broker → App Connector → Certificate Connector |
+| ③ & ⑨ / ④ | Certificate Connector ↔ Intune: outbound validation and approval |
+| ⑤ / ⑦ | NDES / Issuing CA → Domain Controller: Kerberos/LDAP authentication |
+| ⑥ / ⑧ | NDES ↔ Issuing CA: certificate request and return (RPC/DCOM) |
+| ⑩ | Certificate Connector → device: certificate delivered, reversing ② / ②c |
+| — | Root CA ↔ Issuing CA: PKI trust chain / CRL distribution (always active) |
 
-    %% Off-network path via ZTNA
-    RemoteDevice -.->|"② Via ZTNA session\n(broker-mediated)"| ZTNA
-    ZTNA -.->|"Relayed into\norg network"| Connector
+### A Note on ZTNA
 
-    %% Validation and issuance
-    Connector -->|"③ Validate with Intune"| Intune
-    Intune -->|"④ Approved"| Connector
-    Connector -->|"⑤ Forward to NDES"| NDES
-    NDES -->|"⑥ Request certificate"| CA
-    CA -->|"⑦ Issue certificate"| NDES
-    NDES -->|"⑧ Return certificate"| Connector
+ZTNA (Zero Trust Network Access) is a category of technology that allows
+remote devices to reach internal applications without connecting to the
+corporate network as a whole. Traditional VPN gives a remote device a
+foothold on the internal network; ZTNA instead connects the device to a
+cloud broker, which stitches the session to a paired connector inside
+the network, scoped to one specific application. The remote device never
+gets an internal IP address and cannot browse the network freely.
 
-    %% Delivery
-    Connector -->|"⑨ Deliver certificate"| OnPremDevice
-    Connector -.->|"⑨ Deliver via ZTNA"| RemoteDevice
-```
+For this pattern, ZTNA lets a remote device reach the Certificate
+Connector as if it were on the corporate network, without exposing NDES
+or any other internal infrastructure to the internet. If an organisation
+has no ZTNA product, a corporate VPN serves the same structural purpose;
+ZTNA is preferred because it grants application-level access rather than
+full network access.
 
 ### How Enrollment Is Secured
 
-Three independent validation layers protect every certificate enrollment:
+Beyond the two gates described above, two further independent checks
+apply once a request reaches the internal network:
 
-**Layer 1: Intune compliance gate.** A device must be enrolled in Intune
-and satisfy configured compliance policies before it receives a SCEP URL
-or challenge password. Non-enrolled and non-compliant devices cannot
-initiate the enrollment chain.
-
-**Layer 2: NDES challenge password.** Each enrollment request must carry
-a one-time password issued by NDES within its validity window. The
+**NDES challenge password.** Each enrollment request must carry a
+one-time password issued by Intune within its validity window. The
 password is single-use and time-limited. A request that arrives without
 a valid password is rejected unconditionally.
 
-**Layer 3: CA template policy.** The CA validates each certificate signing
+**Domain Controller authentication.** Both NDES and the Issuing CA
+independently authenticate to the Domain Controller over Kerberos/LDAP
+before acting. This confirms that the services participating in the
+chain are themselves trusted, domain-joined services, a check that is
+separate from the device's own compliance status.
+
+**CA template policy.** The CA validates each certificate signing
 request against the configured template. Key size, algorithm, permitted
 attributes, and service account permissions are checked independently of
 the SCEP layer. A request that passes NDES validation can still be
 rejected by the CA if it does not conform to the template.
 
 No single control failure authorises issuance. Each layer operates
-independently.
+independently, and the network gate in particular means there is no
+internet-reachable endpoint for an attacker to attack in the first place.
 
 ### Component Roles
 
 | Component | Location | Role |
 |---|---|---|
+| Microsoft Entra ID | Microsoft cloud | Device identity and join/registration; prerequisite for Intune enrollment |
 | Intune Service | Microsoft cloud | Compliance gate, challenge password issuance, certificate delivery |
-| Managed Device | Endpoint | Key pair generation, CSR construction, certificate installation |
+| ZTNA broker | Cloud (e.g. Zscaler ZPA) | Brokers remote device sessions into the internal network, scoped to one endpoint |
+| Managed Device | Endpoint (on-prem or remote) | Key pair generation, CSR construction, certificate installation |
+| App Connector | Internal network | Pairs with the ZTNA broker; relays remote SCEP traffic internally |
 | Certificate Connector v2 | Internal network, domain-joined server | Outbound-only relay between Intune and NDES |
 | NDES | Internal network | SCEP protocol handling, challenge password validation |
-| Certificate Authority | Internal network | Template-based certificate issuance |
+| Domain Controller | Internal network | Kerberos/LDAP authentication for NDES and the Issuing CA |
+| Issuing CA | Internal network | Template-based certificate issuance |
+| Root CA | Internal network | PKI trust anchor; signs the Issuing CA, publishes CRL |
 
 ---
 
