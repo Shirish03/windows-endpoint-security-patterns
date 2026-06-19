@@ -39,12 +39,12 @@ Each pattern in this repository is structured in four layers to serve different 
 
 ## Reference Architecture Whitepapers
 
-In-depth whitepapers expanding on selected patterns are available to read directly in this repository. Formatted PDF versions are planned; this table will be updated with download links once published as GitHub Releases.
+In-depth whitepapers expanding on selected patterns are available to read directly in this repository. Formatted PDF versions are available as GitHub Releases.
 
 | Whitepaper | Read Online | PDF |
 |---|---|---|
-| BitLocker-to-Go Escrow: Hybrid Entra ID | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | Not yet published |
-| Zero Trust Certificate Infrastructure | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.0.md) | Not yet published |
+| BitLocker-to-Go Escrow: Hybrid Entra ID | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
+| Zero Trust Certificate Infrastructure | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-scep-v1.0) |
 
 ## Engineering Philosophy
 
