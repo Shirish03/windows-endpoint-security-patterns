@@ -33,7 +33,7 @@ and where the answer to a security gap is not always "wait for a platform update
 | 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
-| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | Internet-exposed NDES creates PKI attack surface | Hybrid Entra ID + Intune + Internal PKI + ZTNA/VPN |
+| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices without exposing internal PKI | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
 
@@ -71,6 +71,10 @@ These patterns were developed and validated against:
 - Intune-managed, with co-management or standalone Intune policy
 - PowerShell 5.1+ (scripts do not require PowerShell 7)
 - Group Policy infrastructure present (required for the Sysmon pattern)
+
+Pattern 04 (SCEP Certificate Enrollment via Internal NDES) is the exception to the Hybrid Entra ID
+assumption above — it specifically targets Entra ID Join Only Windows and macOS devices, which have
+no on-premises AD computer object. See that pattern's README for full scope details.
 
 Patterns may apply in broader configurations but have not been validated
 outside this context.
