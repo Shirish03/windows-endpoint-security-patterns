@@ -9,6 +9,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.6.0] - 2026-06-20
+
+### Changed
+- Whitepaper v1.1: macOS scope correction — Executive Summary, Section 1,
+  and Section 6 updated to explicitly state macOS as always Entra ID Join
+  Only when managed through Intune, as macOS has no Windows-style Hybrid
+  Entra ID Join equivalent
+- Whitepaper v1.2: device scope phrasing correction — consistent parallel
+  phrasing for both target device populations (Intune-managed Windows
+  devices that are Entra ID Join Only, and macOS devices) applied across
+  Executive Summary, Section 1, and Section 6; Hybrid Entra ID joined
+  Windows explicitly identified as out of scope, as it uses ADCS
+  auto-enrollment via Group Policy or SCCM; whitepaper markdown in repo
+  renamed from v1.0 to v1.2
+- Pattern 04 README: title updated from "(Hybrid Entra ID)" to "(Entra ID
+  Join Only)"; Environment Requirements device management row corrected to
+  "Entra ID Join Only"; disclaimer updated to match corrected scope
+
+### Added
+- Pattern 04 README: implementation note on SAN configuration and strong
+  certificate mapping for Entra ID Join Only Windows devices and macOS —
+  explains why `{{OnPremisesSecurityIdentifier}}` does not resolve without
+  an on-premises AD computer object, references KB5014754 strong mapping
+  enforcement on domain controllers, documents the `X509IssuerSerialNumber`
+  / `altSecurityIdentities` requirement for on-premises certificate-based
+  authentication, and requires a separate SCEP profile from any Hybrid
+  Entra ID joined Windows profile
+
+---
+
 ## [0.5.0] - 2026-06-19
 
 ### Added

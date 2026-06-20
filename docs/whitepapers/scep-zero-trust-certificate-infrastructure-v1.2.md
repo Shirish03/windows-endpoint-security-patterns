@@ -1,11 +1,11 @@
-# Zero Trust Certificate Infrastructure
-## Secure device certificate enrollment via SCEP and Intune without exposing internal PKI
+# SCEP Certificate Enrollment via Internal NDES
+## A Zero Trust architecture for Entra ID Join Only Windows and macOS devices
 
 ---
 
 | | |
 |---|---|
-| **Version** | 1.0 |
+| **Version** | 1.2 |
 | **Author** | Shirish Mistry |
 | | Associate Principal, Endpoint & Security Architecture |
 | **Domain** | Endpoint Security, Identity, Cloud Workplace |
@@ -16,10 +16,13 @@
 
 ## Executive Summary
 
-Intune-managed Windows devices use SCEP to request certificates from an
-on-premises Certificate Authority. Standard guidance-driven deployments
-place the NDES server, the CA-adjacent component that handles enrollment
-requests, on the internet so the Intune cloud service can reach it. The
+Intune-managed Windows devices that are Entra ID Join Only, and macOS
+devices — which have no Windows-style Hybrid Entra ID Join equivalent and
+are therefore always Entra ID Join Only when managed through Intune — use
+SCEP to request certificates from an on-premises Certificate Authority. Standard
+guidance-driven deployments place the NDES server, the CA-adjacent
+component that handles enrollment requests, on the internet so the Intune
+cloud service can reach it. The
 consequence is an internet-facing endpoint one step from the
 organisation's internal PKI: a server that, if compromised, can be used
 to request certificates trusted by the environment's own authentication
@@ -68,6 +71,30 @@ Microsoft's infrastructure. The path of least resistance described in most
 deployment documentation is to expose NDES to the internet: place it in
 a DMZ, open the HTTPS port, and let Intune reach it directly. This works.
 It also places a CA-adjacent server on the internet attack surface.
+
+### Device Scope
+
+This architecture addresses two device populations for which ADCS
+auto-enrollment via Group Policy or SCCM is not available: Intune-managed
+Windows devices that are Entra ID Join Only, and macOS devices.
+
+Entra ID Join Only Windows devices are joined exclusively to Microsoft
+Entra ID and have no on-premises Active Directory computer object. Group
+Policy and SCCM — and therefore ADCS auto-enrollment — do not apply to
+these devices. They depend on Intune for certificate delivery, and Intune
+depends on NDES to reach the on-premises CA.
+
+macOS devices, which have no Windows-style Hybrid Entra ID Join equivalent
+and are therefore always Entra ID Join Only when managed through Intune,
+cannot use ADCS auto-enrollment via Group Policy.
+
+Hybrid Entra ID joined Windows devices are explicitly outside the scope
+of this pattern. These devices retain access to on-premises Active
+Directory and typically use ADCS auto-enrollment via Group Policy or
+SCCM, without requiring Intune SCEP or an internet-facing NDES server.
+The structural exposure described in this document does not apply to
+them, because ADCS auto-enrollment operates over the internal network
+without any internet-facing enrollment endpoint.
 
 ### Why This Creates a Structural Risk
 
@@ -389,8 +416,10 @@ authentication is established.
 
 ## 6. Recommendation
 
-Organisations operating Windows devices in Hybrid Entra ID joined,
-Intune-managed configurations with an on-premises Certificate Authority
+Organisations managing Intune-enrolled Windows devices that are Entra ID
+Join Only, and macOS devices — which have no Windows-style Hybrid Entra
+ID Join equivalent and are therefore always Entra ID Join Only when
+managed through Intune — alongside an on-premises Certificate Authority
 should deploy NDES on an internal network segment with no internet
 connectivity and route all Intune certificate enrollment through the
 Certificate Connector v2. This architecture eliminates the internet-facing
@@ -432,10 +461,10 @@ URLs are subject to change; search by topic rather than direct URL.*
 ## 8. Disclaimer
 
 This whitepaper is provided as reference material and architectural
-guidance. The architecture described has been developed against specific
-Hybrid Entra ID and Intune-managed environment configurations with
-on-premises Active Directory Certificate Services and may require
-adaptation for other configurations.
+guidance. The architecture described has been developed against specific Entra ID
+Join Only, Intune-managed device configurations with on-premises Active
+Directory Certificate Services and may require adaptation for other
+configurations.
 
 There is no guarantee that this approach will function identically in
 all environments. Administrators should review, test, and validate

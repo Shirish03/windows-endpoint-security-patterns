@@ -1,4 +1,4 @@
-# SCEP Certificate Enrollment: Internal NDES (Hybrid Entra ID)
+# SCEP Certificate Enrollment: Internal NDES (Entra ID Join Only)
 
 ---
 **Jump to section:**
@@ -338,7 +338,7 @@ models can achieve equivalent security posture.
 | **Certificate Connector v2 OS** | Windows Server 2016, 2019, or 2022; domain-joined |
 | **Certificate Connector v2 .NET** | .NET Framework 4.7.2 or later |
 | **Intune subscription** | Microsoft Intune Plan 1 or equivalent |
-| **Device management** | Hybrid Entra ID joined; Intune-managed |
+| **Device management** | Entra ID Join Only; Intune-managed (Windows and macOS) |
 | **Network: connector outbound** | HTTPS (443) to Intune service endpoints; no inbound rules required |
 | **Network: connector to NDES** | HTTPS or HTTP from connector server to NDES; internal network only |
 | **NDES service account** | Domain account; IIS_IUSRS member; enrollment agent certificate |
@@ -430,6 +430,54 @@ Mismatches between the SCEP profile and the CA template are a common
 cause of issuance failure. The CA rejects the request at Step 6 of the
 enrollment flow and logs the denial reason. See
 [Operational Guidance → Failure Detection](#failure-detection).
+
+---
+
+### SAN Configuration and Certificate Mapping: Entra ID Join Only Devices
+
+The SAN configuration for the SCEP profile differs between Hybrid Entra
+ID joined Windows devices and the devices in scope for this pattern.
+
+**Why `{{OnPremisesSecurityIdentifier}}` does not apply here**
+
+Windows devices that are Hybrid Entra ID joined have an on-premises
+Active Directory computer object. AD CS adds the SID security extension
+to certificates issued against that object automatically, satisfying the
+strong certificate mapping requirement enforced on domain controllers.
+The `{{OnPremisesSecurityIdentifier}}` variable in the SCEP SAN relies
+on this mechanism.
+
+Windows devices that are Entra ID Join Only, and all macOS devices, have
+no on-premises AD computer object. The `{{OnPremisesSecurityIdentifier}}`
+variable does not resolve for these devices and must not be used in their
+SCEP profile SAN. AD CS cannot add the SID extension automatically when
+there is no AD computer object for the device.
+
+**KB5014754 and strong mapping enforcement**
+
+Per [KB5014754 — Certificate-based authentication changes on Windows
+domain controllers](https://support.microsoft.com/en-us/topic/kb5014754-certificate-based-authentication-changes-on-windows-domain-controllers-ad2c23b0-15d8-4340-a468-4d4f3b188f16),
+domain controllers now enforce strong certificate mapping for
+certificate-based authentication. Weak mappings — subject name, issuer
+name, UPN, email — are being phased out and must not be relied on for
+new deployments.
+
+For Entra ID Join Only Windows devices and macOS devices, any on-premises
+authentication scenario requiring certificate-based auth against Active
+Directory depends on `X509IssuerSerialNumber` strong mapping, set
+explicitly in the device or user object's `altSecurityIdentities`
+attribute in Active Directory. This cannot be derived automatically from
+the certificate; it must be populated for each device or user that
+requires on-premises certificate-based authentication.
+
+**Separate SCEP profile required**
+
+The SCEP profile for Entra ID Join Only Windows devices and macOS devices
+must be configured separately from any profile used for Hybrid Entra ID
+joined Windows devices. The SAN must use an alternative configuration
+— such as `IntuneDeviceId://{{DeviceId}}` as a URI SAN (see
+[`examples/scep-profile-sample.md`](examples/scep-profile-sample.md)) —
+rather than `{{OnPremisesSecurityIdentifier}}`.
 
 ---
 
@@ -636,9 +684,9 @@ connectivity-related. Check:
 ## Disclaimer
 
 This solution is provided as a reference implementation and design
-pattern. It has been developed against specific Hybrid Entra ID and
-Intune-managed environment configurations and may require adaptation
-for other environments.
+pattern. It has been developed against specific Entra ID Join Only,
+Intune-managed device configurations and may require adaptation for
+other environments.
 
 There is no guarantee that this approach will function identically in
 all environments. Administrators should review, test, and validate
