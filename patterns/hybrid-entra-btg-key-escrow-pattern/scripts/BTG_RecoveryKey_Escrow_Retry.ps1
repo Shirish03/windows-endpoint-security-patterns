@@ -138,20 +138,22 @@ try {
                 Write-Log "SUCCESS: RecoveryPassword protector escrowed successfully ($KeyProtectorId)"
             }
             catch {
+                $ExitCode = 1
                 Write-Log "ERROR: Escrow attempt failed for protector $KeyProtectorId on $DriveLetter : $($_.Exception.Message)"
             }
         }
     }
     else {
+        $ExitCode = 1
         Write-Log "ERROR: Failed to extract drive letter from event message."
         Write-Log "Event message content: $($Event.Message)"
     }
 }
 catch {
+    $ExitCode = 1
     Write-Log "UNHANDLED ERROR: $($_.Exception.Message)"
 }
 finally {
     Write-Log "===== Script Execution Finished ====="
+    exit $ExitCode
 }
-
-exit $ExitCode
