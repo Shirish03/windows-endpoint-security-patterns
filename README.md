@@ -43,7 +43,7 @@ In-depth whitepapers expanding on selected patterns are available to read direct
 
 | Whitepaper | Read Online | PDF |
 |---|---|---|
-| BitLocker-to-Go Escrow: Hybrid Entra ID | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
+| BitLocker-to-Go Recovery Key Escrow via Event-Driven Retry | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.0) |
 | SCEP Certificate Enrollment via Internal NDES | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.2.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-scep-v1.2) |
 
 ## Engineering Philosophy

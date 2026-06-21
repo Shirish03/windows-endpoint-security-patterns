@@ -95,16 +95,16 @@ population.
 ### Background
 
 While backing up OS drive BitLocker recovery keys to Entra ID is well
-supported today, BitLocker-to-Go recovery key escrow remains a gray area
+supported today, BitLocker-to-Go recovery key escrow does not function reliably
 when devices are **Hybrid Entra ID joined and Intune-managed**.
 
 Although Group Policy and Intune CSPs exist to configure recovery key
 backup behavior, Windows 10/11 does not natively and reliably escrow
 **removable drive** recovery keys to Entra ID in this scenario.
 
-This pattern documents a **design gap** identified during the migration
-of an enterprise endpoint security control, and presents a practical,
-event-driven workaround.
+This pattern documents a **design gap** in Windows BitLocker-to-Go
+recovery key escrow on Hybrid Entra ID joined devices, and presents
+a practical, event-driven workaround.
 
 ---
 
@@ -380,7 +380,7 @@ for entries from the time of the 846 event. Common causes:
 | Log entry | Likely cause | Resolution |
 |-----------|-------------|------------|
 | `BackupToAAD-BitLockerKeyProtector not available` | Cmdlet missing on this Windows build | Verify OS version meets requirements |
-| `Stale event — skipping` | Script ran more than 10 minutes after event | Check task trigger delay; verify task fired promptly |
+| `Stale event: skipping` | Script ran more than 10 minutes after event | Check task trigger delay; verify task fired promptly |
 | `No RecoveryPassword protectors found` | Drive has no RecoveryPassword protector | Verify BitLocker is configured with RecoveryPassword protector type |
 | `Exception calling BackupToAAD` | Cloud connectivity failure at execution time | Device was offline; next 846 event will trigger a fresh attempt |
 | `Drive letter extraction failed` | Event message format unexpected | Review `docs/event-id-846-sample.md`; may require script update for OS variant |
