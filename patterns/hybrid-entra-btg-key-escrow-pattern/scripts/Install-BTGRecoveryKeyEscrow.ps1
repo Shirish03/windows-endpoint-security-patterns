@@ -23,6 +23,13 @@ $TargetScriptPath = Join-Path $TargetScriptDir $ScriptSourceName
 $LogRoot       = "$env:ProgramData\BitLocker\Logs"
 $InstallLogFile = Join-Path $LogRoot "Install.log"
 
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal(
+    [Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "This script must be run with administrative privileges."
+    exit 1
+}
+
 if (-not (Test-Path $LogRoot)) {
     New-Item -Path $LogRoot -ItemType Directory -Force | Out-Null
 }
@@ -83,7 +90,16 @@ catch {
 # -------------------------------
 if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
     Write-Output "Existing task found. Removing $TaskName"
-    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+    try {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction Stop
+        Write-InstallLog "Existing task '$TaskName' removed."
+    }
+    catch {
+        $Msg = "ERROR: Failed to remove existing task '$TaskName' : $($_.Exception.Message)"
+        Write-Error $Msg
+        Write-InstallLog $Msg
+        exit 1
+    }
 }
 
 # -------------------------------

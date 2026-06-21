@@ -34,7 +34,7 @@ param()
 # Configuration
 # -------------------------------
 $ScriptName    = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
-$ScriptVersion = "1.0"
+$ScriptVersion = "1.1"
 
 $LogRoot = "$env:ProgramData\BitLocker\Logs"
 $LogFile = Join-Path $LogRoot "$ScriptName.log"
