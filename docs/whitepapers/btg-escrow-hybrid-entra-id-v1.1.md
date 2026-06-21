@@ -1,11 +1,11 @@
-# BitLocker-to-Go Recovery Key Escrow in Hybrid Entra ID Environments
-*A reference architecture for detecting and remediating silent recovery key escrow failures in Hybrid Entra ID environments*
+# BitLocker-to-Go Recovery Key Escrow via Event-Driven Retry
+*A Compensating Control for Hybrid Entra ID Devices*
 
 ---
 
 | | |
 |---|---|
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Author** | Shirish Mistry |
 | | Associate Principal, Endpoint & Security Architecture |
 | **Date** | June 2026 |
@@ -15,9 +15,9 @@
 
 ## Executive Summary
 
-Windows BitLocker-to-Go encrypts removable USB drives and is designed to
-automatically back up recovery keys to Entra ID, ensuring administrators
-can recover data if a drive is lost or a user forgets their password.
+Windows BitLocker-to-Go encrypts removable USB drives and automatically
+backs up recovery keys to Entra ID, so administrators can recover data
+if a drive is lost or a user forgets their password.
 On devices that are Hybrid Entra ID joined and managed through Intune,
 this backup step silently fails. No alert is raised, no user is notified,
 and the device reports as compliant, but the recovery key was never
@@ -67,10 +67,10 @@ standard configuration management tooling.
 
 Hybrid Entra ID join is the dominant configuration in enterprise Windows
 estates undergoing cloud modernisation. Organisations that have not yet
-completed a full Entra ID-only migration, which describes the majority
-of mid-to-large enterprises at any given point in that journey, are
-operating devices in this configuration. Any of those devices on which
-a user encrypts a removable USB drive is subject to this failure.
+completed a full Entra ID-only migration are operating devices in this
+configuration. This describes the majority of mid-to-large enterprises
+at any given point in that journey. Any of those devices on which a
+user encrypts a removable USB drive is subject to this failure.
 
 The scale of the affected population is proportional to the scale of
 the Hybrid Entra ID estate and the rate at which users encrypt removable
@@ -84,7 +84,7 @@ Microsoft's documentation for BitLocker and Intune policy correctly
 describes the configuration required to enable recovery key backup to
 Entra ID. It does not document this specific failure mode for Hybrid
 Entra ID joined devices with removable drives. The absence of
-documentation creates a false confidence: an administrator who has
+documentation creates false confidence. An administrator who has
 correctly followed the documented configuration steps has no reason to
 suspect the control is not functioning.
 
@@ -123,9 +123,8 @@ population.
 The Group Policy and Intune configurations that require recovery key
 backup to Entra ID may be correctly deployed and will appear compliant
 during a policy review. The failure is behavioural, not configurational.
-An assessor validating the control end-to-end, by checking whether
-recovery keys are actually present in Entra ID for enrolled devices,
-would find the keys absent. The control is configured but not
+An assessor who checks whether recovery keys are actually present in
+Entra ID for enrolled devices would find them absent. The control is configured but not
 functioning. This is a more significant finding than a missing policy,
 because it demonstrates a gap between documented controls and effective
 controls.
@@ -277,9 +276,8 @@ A polling approach would require periodically enumerating all
 BitLocker-protected volumes across the device estate and determining
 which recovery keys are absent from Entra ID. This creates a detection
 lag proportional to the polling interval, requires persistent background
-activity on every endpoint, and introduces complexity in distinguishing
-between keys that were never escrowed and those that were escrowed before
-the polling window.
+activity on every endpoint, and introduces complexity in determining which missing keys represent genuine
+escrow failures versus those backed up before the polling window.
 
 The event-driven approach has none of these properties. It executes only
 when a failure is detected, responds within 30 seconds, and has zero
