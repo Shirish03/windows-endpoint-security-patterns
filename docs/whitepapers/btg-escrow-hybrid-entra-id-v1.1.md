@@ -91,17 +91,23 @@ suspect the control is not functioning.
 ### Why Standard Monitoring Does Not Catch It
 
 Windows generates Event ID 846 in the
-`Microsoft-Windows-BitLocker-API/Management` log when recovery key backup
-fails. This event is classified as Level 3: Warning, not Error. Standard
-Windows event monitoring configurations typically alert on Error-level
-events and treat Warning-level events as informational. Event ID 846 does
-not appear in Intune compliance reports, is not surfaced in the Intune
-admin center as a device health signal, and does not trigger any native
-administrative notification.
+`Microsoft-Windows-BitLocker/BitLocker Management` log when recovery key
+backup fails. This event is classified as Error level. However, severity
+alone does not guarantee visibility: Event ID 846 is logged to a
+provider-specific channel under Applications and Services Logs —
+`Microsoft-Windows-BitLocker/BitLocker Management` — that most default
+SIEM and monitoring configurations do not collect from. Standard
+monitoring typically watches the core Windows channels (System,
+Application, Security). An Error-level event in a channel nothing is
+actively collecting from is just as invisible as a Warning-level event
+in a commonly-watched one. Event ID 846 does not appear in Intune
+compliance reports, is not surfaced in the Intune admin center as a
+device health signal, and does not trigger any native administrative
+notification.
 
-The combination of a warning-level event, no platform alert, and correct
-policy compliance reporting means this failure can persist indefinitely
-without detection.
+The combination of an uncollected event channel, no platform alert, and
+correct policy compliance reporting means this failure can persist
+indefinitely without detection.
 
 ---
 
@@ -191,7 +197,7 @@ flowchart TB
     A["User enables BitLocker\non removable USB drive"]
     B["Windows attempts recovery\nkey backup to Entra ID"]
     C["✅ Key escrowed\nEvent ID 845 logged"]:::success
-    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker-API/Management\nLevel 3 — Warning"]
+    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker/BitLocker Management\nLevel 2 — Error"]
     E["Event-triggered scheduled task\nfires within 30 seconds\nSYSTEM context"]
     F["BTG_RecoveryKey_Escrow_Retry.ps1\nexecutes as SYSTEM"]
     G{"BackupToAAD cmdlet\navailable on device?"}
@@ -238,7 +244,7 @@ flowchart TB
 **Event ID 846: the trigger**
 Windows emits this event when BitLocker-to-Go fails to back up a
 recovery key to Entra ID. The event includes the affected drive letter
-and is logged to the `Microsoft-Windows-BitLocker-API/Management` channel.
+and is logged to the `Microsoft-Windows-BitLocker/BitLocker Management` channel.
 The compensating control treats this event as a precise, reliable signal
 rather than noise to suppress.
 
@@ -374,7 +380,7 @@ github.com/Shirish03/windows-endpoint-security-patterns/tree/main/patterns/hybri
 - Microsoft Learn: BitLocker overview and recovery key management
 - Microsoft Learn: Intune device configuration, BitLocker settings
 - Microsoft Learn: Entra ID device management and BitLocker key recovery
-- Windows Event Log reference: Microsoft-Windows-BitLocker-API/Management
+- Windows Event Log reference: Microsoft-Windows-BitLocker/BitLocker Management
 
 *Reference Microsoft documentation at learn.microsoft.com. Content and
 URLs are subject to change; search by topic rather than direct URL.*
