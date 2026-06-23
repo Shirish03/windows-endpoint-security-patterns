@@ -33,7 +33,7 @@ all need a secure provisioning path that does not depend on deployment
 infrastructure, cloud connectivity, or pre-registered hardware hashes.
 
 When no lightweight official path exists, the practical outcome is
-inconsistent provisioning — devices set up manually, with varying
+inconsistent provisioning: devices set up manually, with varying
 security baselines, by whoever is available. The risk is not that the
 wrong tool is used; it is that no governed process exists at all.
 
@@ -57,15 +57,36 @@ either go unprovisioned or are set up outside any governed process.
 **Shadow IT provisioning**
 When no official lightweight provisioning path exists, teams find their
 own. USB-based re-imaging, manual setup, or community scripts fill the
-gap — without the security controls, audit trail, or change management
+gap, without the security controls, audit trail, or change management
 that a governed provisioning approach provides.
+
+**Framework alignment**
+Several widely adopted frameworks address the requirement for consistent,
+verifiable device configuration at the point of provisioning:
+
+- **NIST CSF Protect function (PR.IP-1)** requires that a baseline
+  configuration is established and maintained for all managed systems. A
+  provisioning process that varies by technician or by deployment
+  scenario cannot produce a consistent, auditable baseline.
+- **CIS Control 4** (Secure Configuration of Enterprise Assets and
+  Software) requires that secure configurations are established and
+  actively managed. Provisioning packages enforce this at setup time,
+  before the device enters the estate.
+- **ISO/IEC 27001 Annex A 8.9** (Configuration management) requires
+  that configurations of hardware and software are established,
+  documented, and maintained. A versioned, signed provisioning package
+  is a directly auditable configuration artifact for this control.
+
+This document does not constitute legal or compliance advice; organisations
+should assess applicability to their specific regulatory and contractual
+obligations independently.
 
 ---
 
 ### Architectural Recommendation
 
-Native Windows tooling — specifically the Windows Imaging and
-Configuration Designer (WICD) and provisioning packages — provides a
+Native Windows tooling, specifically the Windows Imaging and
+Configuration Designer (WICD) and provisioning packages, provides a
 viable, secure provisioning path without infrastructure dependency for
 environments where Autopilot or SCCM are not feasible. The approach
 applies encryption, security configuration, and identity join during
@@ -85,7 +106,7 @@ Provisioning Windows devices is often framed as a binary choice:
 
 In reality, many environments sit in between, or intentionally avoid
 adding infrastructure. Conventional provisioning assumes deployment
-servers, directory services, and persistent management infrastructure —
+servers, directory services, and persistent management infrastructure,
 none of which may exist in these scenarios.
 
 This pattern demonstrates how to provision devices securely and
@@ -132,7 +153,7 @@ flowchart TB
    security settings, and application installs
 2. Devices boot from prepared installation media (USB)
 3. Users complete Entra ID join during setup
-4. Security controls — BitLocker, VPN, Wi-Fi, compliance settings —
+4. Security controls (BitLocker, VPN, Wi-Fi, compliance settings)
    are applied automatically
 5. Device reaches a compliant and usable state without manual
    intervention
@@ -156,7 +177,7 @@ flowchart TB
 ### Design Trade-offs and Alternatives Considered
 
 **Why WICD rather than manual setup?**
-Manual setup is inconsistent by nature — each technician makes
+Manual setup is inconsistent by nature; each technician makes
 different choices, and there is no audit trail for the configuration
 applied. WICD packages define configuration as code, applied
 deterministically at every provisioning event.
@@ -203,17 +224,17 @@ than the target Windows build.
 Open WICD and create a new project targeting the appropriate Windows
 edition and architecture. Configure the relevant settings:
 
-- **Account management** — Entra ID join settings if applicable
-- **Security settings** — BitLocker, password policy, screen lock
-- **Certificates** — trusted root certificates if required
-- **Wi-Fi profiles** — pre-configured network profiles
-- **Applications** — silent install packages if needed
+- **Account management**: Entra ID join settings if applicable
+- **Security settings**: BitLocker, password policy, screen lock
+- **Certificates**: trusted root certificates if required
+- **Wi-Fi profiles**: pre-configured network profiles
+- **Applications**: silent install packages if needed
 
 **3. Export the provisioning package**
 
 Export the project as a `.ppkg` file. Sign the package if the
 environment requires signed provisioning packages (recommended for
-production use). Record the package version in the filename — see
+production use). Record the package version in the filename. See
 [Operational Guidance → Package Versioning](#package-versioning).
 
 **4. Place the package on installation media**
@@ -249,6 +270,14 @@ Get-WinEvent -LogName "Microsoft-Windows-Provisioning-Diagnostics-Provider/Admin
     Select-Object TimeCreated, Message -First 20
 ```
 Review for any provisioning errors during OOBE.
+
+---
+
+### Repository Contents
+
+| File | Purpose |
+|---|---|
+| `docs/provisioning-flow.md` | Step-by-step walkthrough of the WICD provisioning flow from package creation through OOBE to first login; includes per-component runtime behaviour notes and failure handling |
 
 ---
 
@@ -299,7 +328,7 @@ Install-ProvisioningPackage -PackagePath "D:\WICD-Provisioning-v1.3-20260601.ppk
 
 ### Physical Security for USB Distribution
 
-The provisioning USB is a sensitive artifact — it defines the security
+The provisioning USB is a sensitive artifact; it defines the security
 baseline for every device it touches. Treat it accordingly:
 
 - Maintain a physical log of how many USBs have been produced, who
@@ -330,6 +359,18 @@ device leaves the provisioning environment:
 Any failed check should be investigated and resolved before the device
 is issued. A device that passes all checks has a confirmed baseline and
 a recoverable encryption state.
+
+---
+
+### Dependencies
+
+| Dependency | Notes |
+|---|---|
+| Windows ADK with WICD | Required on the authoring machine only; not installed on provisioned devices; ADK version should match or exceed the target Windows build |
+| TPM | Required for BitLocker encryption during OOBE; devices without a functional TPM will not encrypt unless the provisioning package includes a policy exception |
+| Entra ID connectivity | Required at OOBE time if the package includes Entra ID join; devices provisioned offline must complete the join step manually post-setup via Settings |
+| Signed provisioning package | Recommended for production use; unsigned packages may trigger a UAC prompt during OOBE or be blocked by policy |
+| Windows installation USB | The provisioning package must be at the root of the installation USB or on a secondary USB presented during OOBE; placement elsewhere will prevent detection |
 
 ---
 

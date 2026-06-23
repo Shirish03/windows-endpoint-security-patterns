@@ -31,7 +31,7 @@ designed to automatically back up the recovery key to Entra ID, so
 administrators can recover data if a user forgets their password or a
 drive is damaged. On devices that are Hybrid Entra ID joined and managed
 through Intune, this backup step silently fails. No alert is raised, no
-user is notified, and the device appears policy-compliant — but the
+user is notified, and the device appears policy-compliant, but the
 recovery key was never stored. If the drive is ever needed for recovery,
 the data is permanently unrecoverable.
 
@@ -40,7 +40,7 @@ the data is permanently unrecoverable.
 ### Risk and Compliance Implications
 
 **Data recoverability**
-Recovery key escrow is not a compliance checkbox — it is the mechanism
+Recovery key escrow is not a compliance checkbox; it is the mechanism
 that makes encrypted data recoverable. When escrow silently fails, the
 organisation holds encrypted removable drives with no administrative
 path to recovery. A single hardware failure, forgotten password, or
@@ -52,8 +52,8 @@ place on removable media and the scale of the affected device population.
 The Group Policy and Intune configurations that require recovery key
 backup to Entra ID may be correctly deployed and will appear compliant
 during a policy review. The failure is behavioural, not configurational.
-An assessor validating the control end-to-end — by checking whether
-recovery keys are actually present in Entra ID for enrolled devices —
+An assessor validating the control end-to-end (by checking whether
+recovery keys are actually present in Entra ID for enrolled devices)
 would find the keys absent. The control is configured but not
 functioning, which is a more difficult finding to remediate than a
 missing policy.
@@ -82,7 +82,7 @@ escrow retry. Windows emits a documented event when recovery key backup
 fails; the recommended approach treats that event as a deterministic
 trigger rather than a log entry to suppress. The solution operates
 entirely within components and trust relationships already present on
-the endpoint — no new infrastructure, no embedded credentials, no
+the endpoint: no new infrastructure, no embedded credentials, no
 background agents. This scope is deliberate: a compensating control
 that works within the platform's established boundaries is auditable,
 predictable, and safe to deploy at scale across a managed device
@@ -95,16 +95,16 @@ population.
 ### Background
 
 While backing up OS drive BitLocker recovery keys to Entra ID is well
-supported today, BitLocker-to-Go recovery key escrow remains a gray area
+supported today, BitLocker-to-Go recovery key escrow does not function reliably
 when devices are **Hybrid Entra ID joined and Intune-managed**.
 
 Although Group Policy and Intune CSPs exist to configure recovery key
 backup behavior, Windows 10/11 does not natively and reliably escrow
 **removable drive** recovery keys to Entra ID in this scenario.
 
-This pattern documents a **design gap** identified during the migration
-of an enterprise endpoint security control, and presents a practical,
-event-driven workaround.
+This pattern documents a **design gap** in Windows BitLocker-to-Go
+recovery key escrow on Hybrid Entra ID joined devices, and presents
+a practical, event-driven workaround.
 
 ---
 
@@ -120,7 +120,7 @@ ID joined device, Windows generates the following event:
     to Entra ID
   - Includes the affected removable drive letter
 
-Event ID 846 is classified as Level 3 — Warning. Windows treats the
+Event ID 846 is classified as Level 3: Warning. Windows treats the
 backup failure as a warning rather than a hard error, which means there
 is no automatic retry and no user-facing alert. The failure is easy to
 miss without explicit log monitoring. This failure event becomes the
@@ -213,8 +213,8 @@ flowchart TB
 ### Design Trade-offs and Alternatives Considered
 
 **Why event-driven rather than proactive polling?**
-A polling approach — running a script periodically to check for missing
-keys — would require enumerating all BitLocker-protected volumes on a
+A polling approach (running a script periodically to check for missing
+keys) would require enumerating all BitLocker-protected volumes on a
 schedule and distinguishing between keys that were never escrowed and
 those that were escrowed before the polling window. The event-driven
 approach is simpler, more deterministic, and has zero overhead on
@@ -236,8 +236,8 @@ avoids dependency on a user session being active.
 **Why a single retry per event?**
 Repeated retries introduce the risk of log flooding and unpredictable
 task behavior under load. If the single retry fails, the failure is
-logged with full context and the next Event ID 846 — should the user
-re-enable BitLocker — will trigger a fresh execution.
+logged with full context, and the next Event ID 846 (should the user
+re-enable BitLocker) will trigger a fresh execution.
 
 ---
 
@@ -279,7 +279,7 @@ All steps are logged to `C:\ProgramData\BitLocker\Logs\Install.log`.
 
 ### Configuration Highlights
 
-**Scheduled task — key settings**
+**Scheduled task: key settings**
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
@@ -325,11 +325,11 @@ in the Entra ID portal under the device record:
 
 | File | Purpose |
 |---|---|
-| `scripts/BTG_RecoveryKey_Escrow_Retry.ps1` | Core escrow retry logic — event parsing, drive letter extraction, and recovery key backup to Entra ID |
-| `scripts/Install-BTGRecoveryKeyEscrow.ps1` | Deployment helper — copies scripts to target path and registers the scheduled task |
-| `tasks/BitLockerToGo-Escrow-Retry.xml` | Scheduled task definition — event trigger configuration and execution context |
+| `scripts/BTG_RecoveryKey_Escrow_Retry.ps1` | Core escrow retry logic: event parsing, drive letter extraction, and recovery key backup to Entra ID |
+| `scripts/Install-BTGRecoveryKeyEscrow.ps1` | Deployment helper: copies scripts to target path and registers the scheduled task |
+| `tasks/BitLockerToGo-Escrow-Retry.xml` | Scheduled task definition: event trigger configuration and execution context |
 | `docs/architecture-flow.md` | Detailed architecture narrative with annotated component walkthrough |
-| `docs/event-id-846-sample.md` | Event structure reference — field mapping, log channel documentation, and 845 vs 846 comparison |
+| `docs/event-id-846-sample.md` | Event structure reference: field mapping, log channel documentation, and 845 vs 846 comparison |
 | `examples/BitLockerToGo-Escrow-Retry.sample.xml` | Illustrative sample task XML for reference |
 | `examples/sample-event.json` | Sanitised Event ID 846 sample for testing and reference |
 | `tests/BTG_RecoveryKey_Escrow_Retry.Tests.ps1` | Pester 5 unit tests for core script logic |
@@ -380,7 +380,7 @@ for entries from the time of the 846 event. Common causes:
 | Log entry | Likely cause | Resolution |
 |-----------|-------------|------------|
 | `BackupToAAD-BitLockerKeyProtector not available` | Cmdlet missing on this Windows build | Verify OS version meets requirements |
-| `Stale event — skipping` | Script ran more than 10 minutes after event | Check task trigger delay; verify task fired promptly |
+| `Stale event: skipping` | Script ran more than 10 minutes after event | Check task trigger delay; verify task fired promptly |
 | `No RecoveryPassword protectors found` | Drive has no RecoveryPassword protector | Verify BitLocker is configured with RecoveryPassword protector type |
 | `Exception calling BackupToAAD` | Cloud connectivity failure at execution time | Device was offline; next 846 event will trigger a fresh attempt |
 | `Drive letter extraction failed` | Event message format unexpected | Review `docs/event-id-846-sample.md`; may require script update for OS variant |
@@ -413,7 +413,7 @@ No recovery key material is written to any log file.
 
 ### Re-enrollment and Device Lifecycle
 
-Certificate or key renewal is not applicable to this pattern — no
+Certificate or key renewal is not applicable to this pattern: no
 certificates or secrets are managed by the solution. If a device is
 re-enrolled in Intune or re-joined to Entra ID, the escrow mechanism
 will continue to function provided the scheduled task remains registered.

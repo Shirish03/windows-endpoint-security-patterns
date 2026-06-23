@@ -34,7 +34,7 @@ Microsoft-Windows-BitLocker/BitLocker Management
 
 ---
 
-## Sample Event — XML View
+## Sample Event: XML View
 
 As displayed in Windows Event Viewer (Details → XML View).
 All identity-bearing values are sanitized.
@@ -67,12 +67,12 @@ All identity-bearing values are sanitized.
 ```
 
 **Level 3 = Warning.** BitLocker treats a backup failure as a warning rather
-than a hard error — there is no automatic retry and no user-facing alert,
+than a hard error; there is no automatic retry and no user-facing alert,
 which is why the failure is easy to miss without explicit log monitoring.
 
 ---
 
-## Sample Event — Message View
+## Sample Event: Message View
 
 As displayed in Windows Event Viewer (General tab / rendered message).
 
@@ -87,7 +87,7 @@ unrelated to the recovery key itself.
 
 ---
 
-## Field Extraction — What the Script Uses and Why
+## Field Extraction: What the Script Uses and Why
 
 The escrow script works from the rendered `Message` property of the event
 object rather than raw `EventData` fields. This is because
@@ -128,23 +128,23 @@ are enumerated fresh from the live BitLocker state via
 
 ---
 
-## Normal vs Failure — Event Comparison
+## Normal vs Failure: Event Comparison
 
 | | Event ID 845 (Success) | Event ID 846 (Failure) |
 |-|------------------------|------------------------|
 | **Meaning** | Recovery key backup to Entra ID succeeded | Recovery key backup to Entra ID failed |
-| **Level** | 4 — Information | 3 — Warning |
+| **Level** | 4: Information | 3: Warning |
 | **Visibility** | No alert; logged silently | No alert; logged silently |
 | **User notification** | None | None |
 | **Intune reporting** | May not surface immediately | May not surface immediately |
-| **Action required** | None | Retry escrow — this pattern |
+| **Action required** | None | Retry escrow (this pattern) |
 
 Both events are logged to `Microsoft-Windows-BitLocker/BitLocker Management`.
 
 **The critical operational detail:** neither event generates a user-facing
 notification or a reliable Intune compliance signal on Hybrid Entra ID
 joined devices. A device that consistently logs Event ID 846 with no
-corresponding 845 has no escrowed recovery key — silently, and without
+corresponding 845 has no escrowed recovery key, silently and without
 any alert. This is the gap the pattern closes.
 
 ---

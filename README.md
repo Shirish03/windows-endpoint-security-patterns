@@ -13,7 +13,7 @@ and cloud-managed Windows environments.
 During enterprise endpoint modernization, several security controls that worked
 reliably in on-premises AD environments either broke silently or had no supported
 equivalent in Hybrid Entra ID and Intune-managed configurations. BitLocker-to-Go
-recovery key escrow was one such control — policy was correctly configured, no
+recovery key escrow was one such control; policy was correctly configured, no
 errors surfaced in Intune, and failures were only visible if you knew which
 Windows event log to watch. This repository documents those gaps and the
 event-driven, operationally practical approaches used to close them without
@@ -22,7 +22,7 @@ introducing new infrastructure or weakening the platform's security model.
 ## Who This Is For
 
 Endpoint engineers, SecOps practitioners, and Intune/Entra administrators
-operating in hybrid or transitional Windows environments — where devices are
+operating in hybrid or transitional Windows environments, where devices are
 Entra ID joined but not fully cloud-native, where Group Policy and Intune coexist,
 and where the answer to a security gap is not always "wait for a platform update."
 
@@ -33,14 +33,23 @@ and where the answer to a security gap is not always "wait for a platform update
 | 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
-| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | Internet-exposed NDES creates PKI attack surface | Hybrid Entra ID + Intune + Internal PKI + ZTNA/VPN |
+| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices without exposing internal PKI | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
 
+## Reference Architecture Whitepapers
+
+In-depth whitepapers expanding on selected patterns are available to read directly in this repository. Formatted PDF versions are available as GitHub Releases.
+
+| Whitepaper | Read Online | PDF |
+|---|---|---|
+| BitLocker-to-Go Recovery Key Escrow via Event-Driven Retry | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.1.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.1) |
+| SCEP Certificate Enrollment via Internal NDES | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.2.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-scep-v1.2) |
+
 ## Engineering Philosophy
 
-- **Event-driven over polling.** Platform signals — Windows event logs, API
-  failure codes, observable state changes — are the trigger point. Scripts run
+- **Event-driven over polling.** Platform signals (Windows event logs, API
+  failure codes, observable state changes) are the trigger point. Scripts run
   in response to verified conditions, not on a schedule.
 - **Patterns and design decisions over turnkey scripts.** Each entry documents
   why a particular approach was taken, what platform behavior it relies on, and
@@ -63,6 +72,10 @@ These patterns were developed and validated against:
 - PowerShell 5.1+ (scripts do not require PowerShell 7)
 - Group Policy infrastructure present (required for the Sysmon pattern)
 
+Pattern 04 (SCEP Certificate Enrollment via Internal NDES) is the exception to the Hybrid Entra ID
+assumption above — it specifically targets Entra ID Join Only Windows and macOS devices, which have
+no on-premises AD computer object. See that pattern's README for full scope details.
+
 Patterns may apply in broader configurations but have not been validated
 outside this context.
 
@@ -70,13 +83,13 @@ outside this context.
 
 Each pattern lives in its own folder under `patterns/` and is self-contained:
 
-- **README.md** — background, problem statement, and solution overview
-- **docs/** — detailed architecture and design documentation
-- **scripts/** — PowerShell implementation where applicable
-- **examples/** — sanitized samples and illustrative output where applicable
-- **tests/** — Pester unit tests where applicable
+- **README.md**: background, problem statement, and solution overview
+- **docs/**: detailed architecture and design documentation
+- **scripts/**: PowerShell implementation where applicable
+- **examples/**: sanitized samples and illustrative output where applicable
+- **tests/**: Pester unit tests where applicable
 
 Start with the pattern README to understand the design context before reading
-the scripts. Each implementation will require adaptation — environment-specific
+the scripts. Each implementation will require adaptation: environment-specific
 paths, policy targeting, and validation in a controlled environment before
 production use.
