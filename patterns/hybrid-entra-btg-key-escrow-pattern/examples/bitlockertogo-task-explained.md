@@ -17,7 +17,7 @@ configured to trigger on a BitLocker API failure event.
 
 - **Trigger**
   - Event-based trigger
-  - Log: `Microsoft-Windows-BitLocker-API/Management`
+  - Log: `Microsoft-Windows-BitLocker/BitLocker Management`
   - Event ID: `846`
 
 - **Action**

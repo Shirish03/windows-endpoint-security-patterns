@@ -113,7 +113,7 @@ event-driven workaround.
 When a user enables BitLocker on a removable USB drive on a Hybrid Entra
 ID joined device, Windows generates the following event:
 
-- **Log:** Microsoft-Windows-BitLocker-API/Management
+- **Log:** Microsoft-Windows-BitLocker/BitLocker Management
 - **Event ID:** 846
 - **Behavior:**
   - Indicates failure to back up the BitLocker-to-Go recovery key
@@ -143,7 +143,7 @@ flowchart TB
     A["User enables BitLocker\non removable USB drive"]
     B["Windows attempts recovery\nkey backup to Entra ID"]
     C["✅ Key escrowed\nEvent ID 845 logged"]:::success
-    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker-API/Management\nLevel 3 — Warning"]
+    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker/BitLocker Management\nLevel 3 — Warning"]
     E["Event-triggered scheduled task\nfires within 30 seconds\nSYSTEM context"]
     F["BTG_RecoveryKey_Escrow_Retry.ps1\nexecutes as SYSTEM"]
     G{"BackupToAAD cmdlet\navailable on device?"}
@@ -283,7 +283,7 @@ All steps are logged to `C:\ProgramData\BitLocker\Logs\Install.log`.
 
 | Setting | Value | Rationale |
 |---------|-------|-----------|
-| Trigger | Event ID 846, `Microsoft-Windows-BitLocker-API/Management` | Responds to the exact failure signal |
+| Trigger | Event ID 846, `Microsoft-Windows-BitLocker/BitLocker Management` | Responds to the exact failure signal |
 | Delay | PT30S (30 seconds) | Allows BitLocker operations to settle before retry |
 | Execution time limit | PT5M (5 minutes) | Bounds execution; escrow completes in seconds |
 | Run as | SYSTEM (S-1-5-18) | Consistent execution regardless of user session |
@@ -306,7 +306,7 @@ BitLocker-to-Go operation:
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
-    LogName = 'Microsoft-Windows-BitLocker-API/Management'
+    LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
     Id      = 845, 846
 } -MaxEvents 10 | Select-Object TimeCreated, Id, Message
 ```
@@ -346,7 +346,7 @@ both on a device:
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
-    LogName = 'Microsoft-Windows-BitLocker-API/Management'
+    LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
     Id      = 845, 846
 } -MaxEvents 20 | Select-Object TimeCreated, Id, Message
 ```
@@ -395,7 +395,7 @@ Get-ScheduledTask -TaskName 'BitLockerToGo-RecoveryKey-Escrow-Retry' |
 
 If the task is missing, re-run the installer. If the trigger is present
 but the task is not firing, confirm the event channel in the task XML
-matches `Microsoft-Windows-BitLocker-API/Management` exactly.
+matches `Microsoft-Windows-BitLocker/BitLocker Management` exactly.
 
 ---
 

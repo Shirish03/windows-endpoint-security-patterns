@@ -24,7 +24,7 @@ workflow.
 
 If the backup operation fails, Windows emits the following event:
 
-- **Log:** Microsoft-Windows-BitLocker-API/Management
+- **Log:** Microsoft-Windows-BitLocker/BitLocker Management
 - **Event ID:** 846
 - **Description:** Recovery key backup to Entra ID failed
 - **Context Provided:** Affected removable drive letter

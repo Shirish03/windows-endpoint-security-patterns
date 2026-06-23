@@ -4,7 +4,7 @@
 
 Event ID 846 is logged by the BitLocker API when a recovery key backup
 to Entra ID (Azure AD) fails. It is emitted in the
-`Microsoft-Windows-BitLocker-API/Management` channel and is the primary
+`Microsoft-Windows-BitLocker/BitLocker Management` channel and is the primary
 signal that drives the escrow retry automation in this pattern.
 
 This document shows what the event looks like in Windows Event Viewer,
@@ -16,18 +16,21 @@ with the corresponding success event.
 ## Log Channel
 
 ```
-Microsoft-Windows-BitLocker-API/Management
+Microsoft-Windows-BitLocker/BitLocker Management
 ```
 
 **Event Viewer navigation path:**
-`Applications and Services Logs → Microsoft → Windows → BitLocker-API → Management`
+`Applications and Services Logs → Microsoft → Windows → BitLocker → BitLocker Management`
 
-> **Note:** An earlier version of the escrow script incorrectly referenced
-> `Microsoft-Windows-BitLocker/BitLocker Management`, which does not exist
-> as a valid channel and would cause `Get-WinEvent` to silently return
-> nothing on every execution. The correct channel is
-> `Microsoft-Windows-BitLocker-API/Management`, consistent with what is
-> shown in the README and architecture documentation.
+> **Note:** An earlier version of this documentation incorrectly stated that
+> `Microsoft-Windows-BitLocker-API/Management` was the correct channel. That
+> was wrong. That channel does not exist as a real Windows event log channel —
+> referencing it causes `schtasks.exe` registration failures and causes
+> `Get-WinEvent` to silently return nothing on every execution. The correct
+> channel, confirmed via `wevtutil`, the raw XML of a live captured event, and
+> a full end-to-end production test (BitLocker-to-Go encryption → Event 846 →
+> scheduled task → script → successful retry → Event 845 confirmed in Entra
+> ID), is `Microsoft-Windows-BitLocker/BitLocker Management`.
 
 ---
 
@@ -51,7 +54,7 @@ All identity-bearing values are sanitized.
     <EventRecordID>2847</EventRecordID>
     <Correlation />
     <Execution ProcessID="1472" ThreadID="2356" />
-    <Channel>Microsoft-Windows-BitLocker-API/Management</Channel>
+    <Channel>Microsoft-Windows-BitLocker/BitLocker Management</Channel>
     <Computer>CORP-PC-0042</Computer>                        <!-- sanitized -->
     <Security UserID="S-1-5-18" />                          <!-- SYSTEM -->
   </System>
@@ -136,7 +139,7 @@ are enumerated fresh from the live BitLocker state via
 | **Intune reporting** | May not surface immediately | May not surface immediately |
 | **Action required** | None | Retry escrow — this pattern |
 
-Both events are logged to `Microsoft-Windows-BitLocker-API/Management`.
+Both events are logged to `Microsoft-Windows-BitLocker/BitLocker Management`.
 
 **The critical operational detail:** neither event generates a user-facing
 notification or a reliable Intune compliance signal on Hybrid Entra ID
@@ -152,7 +155,7 @@ To retrieve the most recent Event ID 846 from PowerShell:
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
-    LogName = 'Microsoft-Windows-BitLocker-API/Management'
+    LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
     Id      = 846
 } -MaxEvents 5
 ```
@@ -161,7 +164,7 @@ To check for both success and failure events on a given drive:
 
 ```powershell
 Get-WinEvent -FilterHashtable @{
-    LogName = 'Microsoft-Windows-BitLocker-API/Management'
+    LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
     Id      = 845, 846
 } -MaxEvents 20 | Select-Object TimeCreated, Id, Message
 ```

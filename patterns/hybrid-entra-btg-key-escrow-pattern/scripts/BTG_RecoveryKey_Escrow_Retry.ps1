@@ -1,4 +1,4 @@
-﻿# =====================================================================
+# =====================================================================
 # Script Name : BTG_RecoveryKey_Escrow_Retry.ps1
 # Author      : Shirish
 #
@@ -34,7 +34,7 @@ param()
 # Configuration
 # -------------------------------
 $ScriptName    = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
-$ScriptVersion = "1.0"
+$ScriptVersion = "1.2"
 
 $LogRoot = "$env:ProgramData\BitLocker\Logs"
 $LogFile = Join-Path $LogRoot "$ScriptName.log"
@@ -73,7 +73,7 @@ try {
     # Retrieve the most recent BitLocker-to-Go backup failure event
     # ------------------------------------------------------------
     $Event = Get-WinEvent -FilterHashtable @{
-        LogName = 'Microsoft-Windows-BitLocker-API/Management'
+        LogName = 'Microsoft-Windows-BitLocker/BitLocker Management'
         Id      = 846
     } -MaxEvents 1 -ErrorAction SilentlyContinue
 
@@ -102,13 +102,17 @@ try {
 
         $DriveLetter = $Matches[1]
         Write-Log "Identified removable volume: $DriveLetter"
+        Write-Log "DEBUG: About to call Get-BitLockerVolume"
 
         # --------------------------------------------------------
         # Retrieve BitLocker volume information
         # --------------------------------------------------------
         $BitLockerVolume = Get-BitLockerVolume -MountPoint $DriveLetter
+        Write-Log "DEBUG: Get-BitLockerVolume succeeded"
+
         $RecoveryProtectors = $BitLockerVolume.KeyProtector |
             Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" }
+        Write-Log "DEBUG: Protector filter complete, found $($RecoveryProtectors.Count) protector(s)"
 
         if (-not $RecoveryProtectors) {
             Write-Log "ERROR: No RecoveryPassword key protectors found on volume $DriveLetter"
@@ -138,20 +142,22 @@ try {
                 Write-Log "SUCCESS: RecoveryPassword protector escrowed successfully ($KeyProtectorId)"
             }
             catch {
+                $ExitCode = 1
                 Write-Log "ERROR: Escrow attempt failed for protector $KeyProtectorId on $DriveLetter : $($_.Exception.Message)"
             }
         }
     }
     else {
+        $ExitCode = 1
         Write-Log "ERROR: Failed to extract drive letter from event message."
         Write-Log "Event message content: $($Event.Message)"
     }
 }
 catch {
+    $ExitCode = 1
     Write-Log "UNHANDLED ERROR: $($_.Exception.Message)"
 }
 finally {
     Write-Log "===== Script Execution Finished ====="
+    exit $ExitCode
 }
-
-exit $ExitCode
