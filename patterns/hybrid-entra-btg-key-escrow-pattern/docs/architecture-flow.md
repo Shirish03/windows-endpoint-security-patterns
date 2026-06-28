@@ -78,35 +78,13 @@ signal.
 
 ## Detailed Architecture Flow
 
-```mermaid
-flowchart TB
-    A[1. User enables BitLocker on removable drive]
-    B[2. Windows BitLocker API]
-    C[3. Event ID 846 logged: Recovery key backup failed]
-    D[4. Event-Triggered Scheduled Task]
+![BitLocker-to-Go dual-destination escrow flow](Images/btg-dual-destination-flow.png)
 
-    subgraph PS[PowerShell Escrow Script Execution]
-        E[5. Parse BitLocker API Event]
-        F[6. Extract Removable Drive Letter]
-        G[7. Identify Recovery Key Protector<br/>Get-BitLockerVolume]
-        H[8. Retry Recovery Key Backup to Entra ID]
-        I[9. Write Execution Logs: Outcome and Context]
-    end
+*BitLocker-to-Go dual-destination escrow: Active Directory succeeds, Entra ID fails and triggers an automated retry.*
 
-    J[10. Entra ID: Recovery Key Storage]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-    H --> J
-    H --> I
-```
-
-The diagram above illustrates the event-driven execution flow for BitLocker-to-Go recovery key escrow on Hybrid Entra ID joined devices.
+The diagram above illustrates the dual-destination escrow attempt and the
+event-driven execution flow that retries the Entra ID half when it fails,
+on Hybrid Entra ID joined devices.
 
 **Key points:**
 
