@@ -95,7 +95,7 @@ Describe 'BTG_RecoveryKey_Escrow_Retry.ps1' {
     }
 
     # ------------------------------------------------------------------
-    # 4. Drive letter extraction — regex tested directly, no script call
+    # 4. Drive letter extraction: regex tested directly, no script call
     # ------------------------------------------------------------------
     Describe 'Drive letter extraction: regex pattern' {
 
@@ -118,7 +118,7 @@ Describe 'BTG_RecoveryKey_Escrow_Retry.ps1' {
     }
 
     # ------------------------------------------------------------------
-    # 5. GUID brace normalisation — pure logic, no script call needed
+    # 5. GUID brace normalisation: pure logic, no script call needed
     # ------------------------------------------------------------------
     Describe 'GUID brace normalisation' {
 

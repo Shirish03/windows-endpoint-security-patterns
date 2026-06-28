@@ -318,6 +318,7 @@ in the Entra ID portal under the device record:
 | `docs/architecture-flow.md` | Detailed architecture narrative with annotated component walkthrough |
 | `docs/event-id-846-sample.md` | Event structure reference: field mapping, log channel documentation, and 845 vs 846 comparison |
 | `examples/BitLockerToGo-Escrow-Retry.sample.xml` | Illustrative sample task XML for reference |
+| `examples/bitlockertogo-task-explained.md` | Annotated walkthrough of the example artifacts in the examples folder |
 | `examples/sample-event.json` | Sanitised Event ID 846 sample for testing and reference |
 | `tests/BTG_RecoveryKey_Escrow_Retry.Tests.ps1` | Pester 5 unit tests for core script logic |
 

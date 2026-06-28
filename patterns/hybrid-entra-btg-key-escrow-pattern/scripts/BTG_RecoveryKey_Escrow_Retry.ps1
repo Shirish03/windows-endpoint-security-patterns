@@ -86,11 +86,11 @@ try {
     Write-Log "Processing BitLocker event logged at $($Event.TimeCreated)"
 
     # ------------------------------------------------------------
-    # Recency guard — skip stale events
+    # Recency guard: skip stale events
     # ------------------------------------------------------------
     $EventAge = (Get-Date) - $Event.TimeCreated
     if ($EventAge.TotalMinutes -gt 10) {
-        Write-Log "Event is $([math]::Round($EventAge.TotalMinutes, 1)) minutes old — skipping stale event."
+        Write-Log "Event is $([math]::Round($EventAge.TotalMinutes, 1)) minutes old; skipping stale event."
         $ExitCode = 0
         return
     }

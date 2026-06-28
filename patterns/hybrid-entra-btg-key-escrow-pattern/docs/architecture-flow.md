@@ -3,12 +3,13 @@
 ## Context
 
 In Hybrid Entra ID joined Windows environments, BitLocker-to-Go recovery
-key backup to Entra ID may fail or emit failure events even when relevant
-Group Policy and Intune configurations are correctly applied.
+key backup to Entra ID does not function reliably even when relevant
+Group Policy and Intune configurations are correctly applied. The Active
+Directory backup path is not affected; the gap is specific to the Entra
+ID destination.
 
-In these scenarios, the failure does not always surface through
-user-facing prompts or administrative alerts, creating a quiet
-operational and audit risk.
+The failure does not surface through user-facing prompts or administrative
+alerts, making it difficult to detect without explicit log monitoring.
 
 This design leverages **observable platform behavior** rather than
 configuration enforcement alone, using native Windows signals to detect
@@ -88,6 +89,7 @@ on Hybrid Entra ID joined devices.
 
 **Key points:**
 
+- The diagram shows the dual-destination escrow context: Active Directory escrow succeeds; the Entra ID half fails and triggers the automated retry described below.
 - The **event-triggered scheduled task** ensures the script runs immediately after a backup failure (Event ID 846).  
 - All control logic after event detection is fully handled by the **PowerShell escrow script**: it parses the event, extracts the target drive, retrieves the recovery key, retries escrow to Entra ID, and logs execution details.  
 - This approach runs safely and automatically, using only built-in Windows features and the device’s existing trust with Entra ID.  

@@ -13,7 +13,7 @@ and cloud-managed Windows environments.
 During enterprise endpoint modernization, several security controls that worked
 reliably in on-premises AD environments either broke silently or had no supported
 equivalent in Hybrid Entra ID and Intune-managed configurations. BitLocker-to-Go
-recovery key escrow was one such control; policy was correctly configured, no
+recovery key escrow to Entra ID was one such control; policy was correctly configured, no
 errors surfaced in Intune, and failures were only visible if you knew which
 Windows event log to watch. This repository documents those gaps and the
 event-driven, operationally practical approaches used to close them without
@@ -30,7 +30,7 @@ and where the answer to a security gap is not always "wait for a platform update
 
 | # | Pattern | Problem Solved | Environment |
 |---|---------|----------------|-------------|
-| 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Native escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
+| 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Entra ID half of dual-destination escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
 | 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices without exposing internal PKI | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
