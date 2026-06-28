@@ -16,7 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   files, and supporting documentation: `Microsoft-Windows-BitLocker-API/Management`
   → `Microsoft-Windows-BitLocker/BitLocker Management`, confirmed via live
   device testing (raw event XML and wevtutil both identify the correct channel)
-- BTG escrow script (v1.2): exit-code handling defects resolved — `return`
+- BTG escrow script (v1.2): exit-code handling defects resolved. `return`
   statements bypassed standalone `exit $ExitCode`; outer and inner catch blocks
   did not set `$ExitCode = 1`; drive letter extraction failure branch was also
   missing `$ExitCode = 1`; script effectively always exited 0 regardless of outcome
@@ -26,7 +26,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Event ID 846 severity corrected to Error-level in event-id-846-sample.md and
   BTG pattern README; corrected explanation applied: Error-level but logged to the
   `Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
-  SIEM and monitoring configurations do not watch — channel placement, not severity,
+  SIEM and monitoring configurations do not watch. Channel placement, not severity,
   explains why it is easy to miss
 
 ### Changed

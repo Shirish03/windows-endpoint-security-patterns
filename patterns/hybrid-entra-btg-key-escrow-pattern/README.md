@@ -130,7 +130,7 @@ recovery keys through role-based access control, without granting broader
 Active Directory administrative permissions solely to allow staff to locate
 recovery passwords.
 
-![Active Directory BitLocker Recovery tab — no drive-type labels](docs/Images/btg-ad-recovery-no-drive-type.png)
+![Active Directory BitLocker Recovery tab, no drive-type labels](docs/Images/btg-ad-recovery-no-drive-type.png)
 
 *Active Directory's BitLocker Recovery tab lists recovery passwords with no indication of which drive each one belongs to.*
 
@@ -155,7 +155,7 @@ ID joined device, Windows generates the following event:
 Event ID 846 is Error-level, confirmed via direct device testing. Despite
 being Error-level, it is logged to the
 `Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
-SIEM and monitoring configurations do not watch — channel placement, not
+SIEM and monitoring configurations do not watch. Channel placement, not
 severity, is why the failure is easy to miss without explicit log monitoring.
 There is no automatic retry and no user-facing alert. This failure event
 becomes the **trigger point** for the solution.
@@ -170,7 +170,7 @@ key escrow.
 
 ![BitLocker-to-Go dual-destination escrow flow](docs/Images/btg-dual-destination-flow.png)
 
-*Figure — BitLocker-to-Go dual-destination escrow: Active Directory succeeds, Entra ID fails and triggers an automated retry.*
+*BitLocker-to-Go dual-destination escrow: Active Directory succeeds, Entra ID fails and triggers an automated retry.*
 
 ---
 

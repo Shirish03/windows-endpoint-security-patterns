@@ -24,7 +24,7 @@ Microsoft-Windows-BitLocker/BitLocker Management
 
 > **Note:** An earlier version of this documentation incorrectly stated that
 > `Microsoft-Windows-BitLocker-API/Management` was the correct channel. That
-> was wrong. That channel does not exist as a real Windows event log channel —
+> was wrong. That channel does not exist as a real Windows event log channel:
 > referencing it causes `schtasks.exe` registration failures and causes
 > `Get-WinEvent` to silently return nothing on every execution. The correct
 > channel, confirmed via `wevtutil`, the raw XML of a live captured event, and
@@ -46,7 +46,7 @@ All identity-bearing values are sanitized.
               Guid="{9C88D4AD-0F66-4E89-A34A-5A68B27A8B62}" />
     <EventID>846</EventID>
     <Version>0</Version>
-    <Level>3</Level>
+    <Level>2</Level>
     <Task>0</Task>
     <Opcode>0</Opcode>
     <Keywords>0x4000000000000000</Keywords>
@@ -66,11 +66,16 @@ All identity-bearing values are sanitized.
 </Event>
 ```
 
-**Level 3 = Error.** Event ID 846 is Error-level, confirmed via direct device
+> **Note on Level value:** The Level value shown here (2) reflects the
+> standard Windows Error mapping (1 = Critical, 2 = Error, 3 = Warning,
+> 4 = Information). This will be confirmed against a live-captured Event
+> ID 846's raw XML in a future update.
+
+**Level 2 = Error.** Event ID 846 is Error-level, confirmed via direct device
 testing: Event Viewer's Level column and the raw event XML both show Error.
 Despite being Error-level, it is logged to the
 `Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
-SIEM and monitoring configurations do not watch — channel placement, not
+SIEM and monitoring configurations do not watch. Channel placement, not
 severity, is why the failure is easy to miss. There is no automatic retry and
 no user-facing alert.
 
@@ -137,7 +142,7 @@ are enumerated fresh from the live BitLocker state via
 | | Event ID 845 (Success) | Event ID 846 (Failure) |
 |-|------------------------|------------------------|
 | **Meaning** | Recovery key backup to Entra ID succeeded | Recovery key backup to Entra ID failed |
-| **Level** | 4: Information | 3: Error |
+| **Level** | 4: Information | 2: Error |
 | **Visibility** | No alert; logged silently | No alert; logged silently |
 | **User notification** | None | None |
 | **Intune reporting** | May not surface immediately | May not surface immediately |
