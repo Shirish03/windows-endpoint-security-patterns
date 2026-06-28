@@ -66,9 +66,13 @@ All identity-bearing values are sanitized.
 </Event>
 ```
 
-**Level 3 = Warning.** BitLocker treats a backup failure as a warning rather
-than a hard error; there is no automatic retry and no user-facing alert,
-which is why the failure is easy to miss without explicit log monitoring.
+**Level 3 = Error.** Event ID 846 is Error-level, confirmed via direct device
+testing: Event Viewer's Level column and the raw event XML both show Error.
+Despite being Error-level, it is logged to the
+`Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
+SIEM and monitoring configurations do not watch — channel placement, not
+severity, is why the failure is easy to miss. There is no automatic retry and
+no user-facing alert.
 
 ---
 
@@ -133,7 +137,7 @@ are enumerated fresh from the live BitLocker state via
 | | Event ID 845 (Success) | Event ID 846 (Failure) |
 |-|------------------------|------------------------|
 | **Meaning** | Recovery key backup to Entra ID succeeded | Recovery key backup to Entra ID failed |
-| **Level** | 4: Information | 3: Warning |
+| **Level** | 4: Information | 3: Error |
 | **Visibility** | No alert; logged silently | No alert; logged silently |
 | **User notification** | None | None |
 | **Intune reporting** | May not surface immediately | May not surface immediately |

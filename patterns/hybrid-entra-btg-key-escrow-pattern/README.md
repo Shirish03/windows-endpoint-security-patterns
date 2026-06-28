@@ -108,6 +108,38 @@ a practical, event-driven workaround.
 
 ---
 
+### Dual-Destination Escrow and RBAC
+
+BitLocker recovery key escrow can target two separate destinations: Active
+Directory Domain Services, for domain-joined and Hybrid Entra ID joined
+devices, and Microsoft Entra ID, for Entra ID joined and Hybrid Entra ID
+joined devices managed through Intune. A Hybrid Entra ID joined device is
+expected to back up to both destinations when both are properly configured.
+The Active Directory path is not affected by the issue this pattern
+addresses; it continues to escrow reliably. This pattern specifically
+addresses the Entra ID half of that dual-backup expectation.
+
+Even where Active Directory escrow works reliably, it has a practical
+limitation for removable drives: Active Directory's BitLocker Recovery view
+lists recovery passwords by date and password ID only, with no indication of
+which physical drive each one protects, making it difficult to identify which
+entry corresponds to a specific USB drive. Microsoft Entra ID labels each
+recovery key by drive type, distinguishing removable BitLocker-to-Go drives
+from operating system drives, and supports delegating helpdesk access to
+recovery keys through role-based access control, without granting broader
+Active Directory administrative permissions solely to allow staff to locate
+recovery passwords.
+
+![Active Directory BitLocker Recovery tab — no drive-type labels](docs/Images/btg-ad-recovery-no-drive-type.png)
+
+*Active Directory's BitLocker Recovery tab lists recovery passwords with no indication of which drive each one belongs to.*
+
+![Microsoft Entra ID recovery keys labeled by drive type](docs/Images/btg-entra-id-recovery-drive-type.png)
+
+*Microsoft Entra ID labels each recovery key by drive type, distinguishing removable BitLocker-to-Go drives from operating system drives.*
+
+---
+
 ### Observed Platform Behaviour
 
 When a user enables BitLocker on a removable USB drive on a Hybrid Entra
@@ -120,11 +152,13 @@ ID joined device, Windows generates the following event:
     to Entra ID
   - Includes the affected removable drive letter
 
-Event ID 846 is classified as Level 3: Warning. Windows treats the
-backup failure as a warning rather than a hard error, which means there
-is no automatic retry and no user-facing alert. The failure is easy to
-miss without explicit log monitoring. This failure event becomes the
-**trigger point** for the solution.
+Event ID 846 is Error-level, confirmed via direct device testing. Despite
+being Error-level, it is logged to the
+`Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
+SIEM and monitoring configurations do not watch — channel placement, not
+severity, is why the failure is easy to miss without explicit log monitoring.
+There is no automatic retry and no user-facing alert. This failure event
+becomes the **trigger point** for the solution.
 
 ---
 
@@ -134,56 +168,9 @@ The solution implements an **automated retry mechanism** that reacts to
 the BitLocker API failure event and programmatically performs recovery
 key escrow.
 
-```mermaid
-flowchart TB
-    classDef success fill:#d4edda,stroke:#28a745,color:#155724
-    classDef failure fill:#f8d7da,stroke:#dc3545,color:#721c24
-    classDef warning fill:#fff3cd,stroke:#ffc107,color:#856404
+![BitLocker-to-Go dual-destination escrow flow](docs/Images/btg-dual-destination-flow.png)
 
-    A["User enables BitLocker\non removable USB drive"]
-    B["Windows attempts recovery\nkey backup to Entra ID"]
-    C["✅ Key escrowed\nEvent ID 845 logged"]:::success
-    D["Windows logs Event ID 846\nMicrosoft-Windows-BitLocker/BitLocker Management\nLevel 3 — Warning"]
-    E["Event-triggered scheduled task\nfires within 30 seconds\nSYSTEM context"]
-    F["BTG_RecoveryKey_Escrow_Retry.ps1\nexecutes as SYSTEM"]
-    G{"BackupToAAD cmdlet\navailable on device?"}
-    H["❌ Exit 1\nDevice lacks required module\nLogged to ProgramData"]:::failure
-    I{"Event age\n≤ 10 minutes?"}
-    J["⏭ Exit 0\nStale event logged\nNo action taken"]
-    K["Extract drive letter from event message\nRegex: volume\\s+[A-Z]:"]
-    L{"Drive letter\nextracted?"}
-    M["❌ Log parse failure\nRaw message captured\nfor diagnostics"]:::warning
-    N["Get-BitLockerVolume\nFind RecoveryPassword\nprotectors on volume"]
-    O{"RecoveryPassword\nprotectors found?"}
-    P["❌ Exit 1\nNo protectors on volume\nLogged"]:::failure
-    Q["For each protector\nNormalize GUID format\nAttempt BackupToAAD"]
-    R{"Escrow\nresult?"}
-    S["✅ Exit 0\nKey escrowed to Entra ID\nTimestamp logged"]:::success
-    T["⚠ Log exception\nContinue to next\nprotector if any"]:::warning
-
-    A --> B
-    B -->|Success| C
-    B -->|Failure| D
-    D --> E
-    E --> F
-    F --> G
-    G -->|No| H
-    G -->|Yes| I
-    I -->|Stale — skip| J
-    I -->|Recent — proceed| K
-    K --> L
-    L -->|No match| M
-    L -->|Matched| N
-    N --> O
-    O -->|None| P
-    O -->|Found| Q
-    Q --> R
-    R -->|Success| S
-    R -->|Exception| T
-```
-
-> Color guide: green nodes = success paths, red = terminal failures,
-> amber = logged errors with continuation.
+*Figure — BitLocker-to-Go dual-destination escrow: Active Directory succeeds, Entra ID fails and triggers an automated retry.*
 
 ---
 

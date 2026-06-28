@@ -16,6 +16,30 @@ and compensate for recovery key escrow failures.
 
 ---
 
+## Dual-Destination Escrow and RBAC
+
+BitLocker recovery key escrow can target two separate destinations: Active
+Directory Domain Services, for domain-joined and Hybrid Entra ID joined
+devices, and Microsoft Entra ID, for Entra ID joined and Hybrid Entra ID
+joined devices managed through Intune. A Hybrid Entra ID joined device is
+expected to back up to both destinations when both are properly configured.
+The Active Directory path is not affected by the issue this pattern
+addresses; it continues to escrow reliably. This pattern specifically
+addresses the Entra ID half of that dual-backup expectation.
+
+Even where Active Directory escrow works reliably, it has a practical
+limitation for removable drives: Active Directory's BitLocker Recovery view
+lists recovery passwords by date and password ID only, with no indication of
+which physical drive each one protects, making it difficult to identify which
+entry corresponds to a specific USB drive. Microsoft Entra ID labels each
+recovery key by drive type, distinguishing removable BitLocker-to-Go drives
+from operating system drives, and supports delegating helpdesk access to
+recovery keys through role-based access control, without granting broader
+Active Directory administrative permissions solely to allow staff to locate
+recovery passwords.
+
+---
+
 ## Event-Driven Signal
 
 When a user enables BitLocker on a removable USB drive, Windows attempts

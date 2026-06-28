@@ -9,6 +9,43 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.7.0] - 2026-06-28
+
+### Fixed
+- Event log channel name corrected across BTG escrow script, both task XML
+  files, and supporting documentation: `Microsoft-Windows-BitLocker-API/Management`
+  → `Microsoft-Windows-BitLocker/BitLocker Management`, confirmed via live
+  device testing (raw event XML and wevtutil both identify the correct channel)
+- BTG escrow script (v1.2): exit-code handling defects resolved — `return`
+  statements bypassed standalone `exit $ExitCode`; outer and inner catch blocks
+  did not set `$ExitCode = 1`; drive letter extraction failure branch was also
+  missing `$ExitCode = 1`; script effectively always exited 0 regardless of outcome
+- Installer (Install-BTGRecoveryKeyEscrow.ps1): elevation check added before all
+  operations; `Unregister-ScheduledTask` wrapped in `try/catch` for consistent
+  error handling
+- Event ID 846 severity corrected to Error-level in event-id-846-sample.md and
+  BTG pattern README; corrected explanation applied: Error-level but logged to the
+  `Microsoft-Windows-BitLocker/BitLocker Management` channel that most default
+  SIEM and monitoring configurations do not watch — channel placement, not severity,
+  explains why it is easy to miss
+
+### Changed
+- Mermaid flowchart in BTG pattern README replaced with polished flowchart image
+  (btg-dual-destination-flow.png)
+
+### Added
+- Dual-destination escrow and RBAC section added to BTG pattern README
+  (Architecture & Design) and architecture-flow.md: documents Active Directory
+  and Entra ID as separate escrow destinations for Hybrid Entra ID joined devices,
+  Active Directory's limitation for removable drives (no drive-type labeling), and
+  Entra ID's drive-type labeling and RBAC delegation for helpdesk recovery access
+  without broader AD permissions
+- Screenshots embedded in BTG pattern README illustrating Active Directory's
+  unlabeled recovery password view and Entra ID's drive-type-labeled recovery key
+  view (btg-ad-recovery-no-drive-type.png, btg-entra-id-recovery-drive-type.png)
+
+---
+
 ## [0.6.0] - 2026-06-20
 
 ### Changed
