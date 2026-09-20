@@ -71,7 +71,7 @@ These patterns were developed and validated against:
 - Hybrid Entra ID joined devices (on-premises AD + Entra ID)
 - Intune-managed, with co-management or standalone Intune policy
 - PowerShell 5.1+ (scripts do not require PowerShell 7)
-- Group Policy infrastructure present (required for the Sysmon pattern)
+- Group Policy infrastructure present (required for the Sysmon and WEF patterns)
 
 Pattern 04 (SCEP Certificate Enrollment via Internal NDES) is the exception to the Hybrid Entra ID
 assumption above — it specifically targets Entra ID Join Only Windows and macOS devices, which have
