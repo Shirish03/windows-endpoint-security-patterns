@@ -48,7 +48,7 @@ Threat coverage gaps accumulate when configuration updates are delayed
 by deployment cycles. A detection rule update that would close a known
 gap takes days or weeks instead of hours when it must travel through a
 software packaging and deployment pipeline. Over time, this lag becomes
-a structural limit on how quickly the organisation can respond to
+a structural limit on how quickly the organization can respond to
 emerging threats.
 
 **Configuration drift**
@@ -64,24 +64,16 @@ deployment records. Neither is reliable at scale. This creates an audit
 gap in environments where Sysmon configuration is a documented security
 control.
 
-**Framework alignment**
-Several widely adopted frameworks treat detection tool integrity and
-monitoring continuity as security control requirements:
+**Why this matters beyond convenience**
+Monitoring continuity and detection-tool integrity are treated as baseline
+security control requirements in most audit and compliance programs,
+independent of which framework an organization follows. A Sysmon
+configuration that is out of date, or whose active version cannot be
+confirmed, weakens the assurance that host-level monitoring is functioning
+as intended, and is difficult to defend during an audit or after an
+incident.
 
-- **NIST CSF Detect function (DE.CM)** requires that the organisation
-  monitors for cybersecurity events across the environment. A Sysmon
-  configuration that is out of date or whose version cannot be confirmed
-  weakens the assurance that this monitoring is functioning as intended.
-- **NIST SP 800-137** (Information Security Continuous Monitoring)
-  addresses the requirement that monitoring mechanisms are maintained and
-  that their current state is verifiable. Configuration drift in a host
-  telemetry tool is a direct gap against this requirement.
-- **CIS Control 8** (Audit Log Management) includes the requirement that
-  logging tools are configured consistently and that their configuration
-  is maintained. Registry-based delivery provides a mechanism to enforce
-  and verify that consistency at scale.
-
-This document does not constitute legal or compliance advice; organisations
+This document does not constitute legal or compliance advice; organizations
 should assess applicability to their specific regulatory and contractual
 obligations independently.
 
@@ -104,7 +96,7 @@ the software deployment pipeline).
 
 Sysmon is a host-based telemetry tool that extends native Windows event
 logging with detailed visibility into process execution, network
-connections, file system activity, and other system behaviours.
+connections, file system activity, and other system behaviors.
 
 While the Sysmon binary itself is typically deployed once and remains
 stable, its configuration defines what is observed and how events are
@@ -116,6 +108,12 @@ In many environments, configuration updates are bundled with the Sysmon
 binary and delivered through software deployment pipelines. While
 functional, this creates unnecessary coupling between binary lifecycle
 management and configuration changes, slowing down detection iteration.
+
+Once generated, Sysmon events are typically collected off the endpoint
+through Windows Event Forwarding; the
+[Windows Event Forwarding pattern](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/windows-event-forwarding-categorized-collection)
+documents how Sysmon telemetry is separated into its own category and
+channel downstream of this one.
 
 ---
 
@@ -129,7 +127,7 @@ compiled configuration to the registry:
 - **Type:** `REG_BINARY`
 
 Sysmon reads from this registry representation at runtime, not from the
-original XML file. This behaviour makes it possible to manage Sysmon
+original XML file. This behavior makes it possible to manage Sysmon
 configuration independently from the Sysmon binary, using native Windows
 policy delivery mechanisms.
 
@@ -139,35 +137,9 @@ policy delivery mechanisms.
 
 This pattern decouples Sysmon configuration delivery from binary
 deployment by treating the registry-backed configuration as the
-authoritative artifact and distributing it via centralised policy.
+authoritative artifact and distributing it via centralized policy.
 
-```mermaid
-flowchart TB
-    subgraph S1["① Reference system"]
-        A["Validated Sysmon\nXML config file"]
-        B["sysmon.exe -c config.xml\nConfiguration imported"]
-        A --> B
-    end
-
-    subgraph S2["② Registry extraction"]
-        C["HKLM\\SYSTEM\\CurrentControlSet\nServices\\SysmonDrv\\Parameters\nRules: REG_BINARY\nextracted as deployment artifact"]
-    end
-
-    subgraph S3["③ Policy distribution"]
-        D["Group Policy Object\nor Intune Policy CSP\nRegistry preference targeting\nSysmonDrv\\Rules\nNo agents required"]
-    end
-
-    subgraph S4["④ Target endpoints"]
-        E["Standard policy refresh cycle\nNo manual steps"]
-        F["Registry value applied to endpoint"]
-        G["Sysmon reads updated configuration\nat runtime  —  binary unchanged"]
-        E --> F --> G
-    end
-
-    S1 --> S2
-    S2 --> S3
-    S3 --> S4
-```
+![Registry-Based Sysmon Configuration Deployment diagram, showing configuration exported from a reference system, extracted from the registry as a versioned artifact, packaged into a Group Policy Object or Intune Policy CSP profile, and applied to endpoints at the next policy refresh.](docs/sysmon-registry-deployment-diagram.png)
 
 ---
 
@@ -199,6 +171,18 @@ management, that path is preferable. This pattern is designed for
 environments where no such platform is available or where Sysmon is
 managed independently of the primary telemetry pipeline.
 
+**What trade-off does registry distribution accept regarding policy refresh?**
+The registry value carries the entire compiled Sysmon ruleset, not an
+incremental diff. Every configuration change distributes the full binary
+through policy refresh, not just the delta between versions. For large or
+frequently updated configurations, this can extend policy refresh duration
+compared to typical small registry preferences distributed via GPO or
+Intune. This is an accepted cost of using a single, auditable registry
+value as the deployment artifact rather than a differential update
+mechanism; see
+[Performance Monitoring for Large Configurations](#performance-monitoring-for-large-configurations)
+for how to monitor and mitigate it in practice.
+
 ---
 
 ## Implementation Reference
@@ -225,7 +209,7 @@ Load the XML configuration on a controlled reference machine:
 sysmon.exe -c config.xml
 ```
 
-Confirm the configuration is syntactically correct and behaviourally
+Confirm the configuration is syntactically correct and behaviorally
 intentional before extraction.
 
 **2. Extract the compiled registry value**
@@ -348,11 +332,16 @@ Sysmon itself may also generate higher event volumes with expanded
 configurations. Monitor Windows Event Log disk usage and event forwarding
 pipeline throughput after significant configuration changes.
 
+Where Sysmon events are forwarded off-box, sustained throughput also
+depends on the collection tier's own capacity and channel sizing; see the
+[Windows Event Forwarding pattern](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/windows-event-forwarding-categorized-collection)
+for that side of the pipeline.
+
 ---
 
 ### Rolling Back a Bad Configuration
 
-If a deployed configuration causes unexpected behaviour (excessive event
+If a deployed configuration causes unexpected behavior (excessive event
 volume, missing critical events, or endpoint performance impact), roll
 back by restoring the previous registry value:
 
@@ -406,6 +395,12 @@ queryable artifacts and policy reporting mechanisms.
 | Policy infrastructure | Group Policy (domain-joined) or Intune Policy CSP (Intune-managed) must be functioning and reaching the target endpoint population; policy delivery failures result in silent configuration drift |
 | Reference system | A Windows system with Sysmon installed is required to validate and extract configuration updates; it must run the same Sysmon version as the target endpoints to ensure binary compatibility of the exported registry value |
 | SHA-256 hash records | The extraction script produces a hash for each exported configuration; retaining these is the primary mechanism for verifying version consistency across the fleet |
+
+---
+
+## Related Patterns
+
+- **[Windows Event Forwarding: Categorized Collection](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/windows-event-forwarding-categorized-collection)**: decouples telemetry collection into category-based subscriptions and dedicated channels downstream of the endpoint. Sysmon is typically one of the categories that pattern collects, and both patterns share the same decoupling philosophy applied at different points in the pipeline: configuration lifecycle here, telemetry lifecycle there.
 
 ---
 
