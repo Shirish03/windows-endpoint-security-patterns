@@ -117,6 +117,27 @@ channel downstream of this one.
 
 ---
 
+### A Note on Native Sysmon (as of September 2026)
+
+Starting with the March 2026 cumulative update (KB5079473), Windows 11
+24H2+ and Windows Server 2025 offer Sysmon as a built-in optional feature,
+serviced through Windows Update rather than a separate Sysinternals
+download. The engine, event schema, and XML configuration format are
+unchanged from the standalone tool.
+
+This pattern remains applicable regardless of which Sysmon you run.
+Native integration addresses binary installation and updates; it does
+not change how configuration is delivered. Configuration is still applied
+with `sysmon -c` and still requires distribution to endpoints through
+Group Policy, Intune, or another management platform, which is the
+problem this pattern solves. The one operational difference worth
+knowing: Microsoft does not support running built-in and standalone
+Sysmon side by side on the same device, so environments migrating to
+the native feature should uninstall any existing standalone installation
+first.
+
+---
+
 ### Key Observation
 
 When a Sysmon XML configuration is imported, Windows persists the
