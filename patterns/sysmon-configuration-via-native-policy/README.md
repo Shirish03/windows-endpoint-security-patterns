@@ -122,19 +122,49 @@ channel downstream of this one.
 Starting with the March 2026 cumulative update (KB5079473), Windows 11
 24H2+ and Windows Server 2025 offer Sysmon as a built-in optional feature,
 serviced through Windows Update rather than a separate Sysinternals
-download. The engine, event schema, and XML configuration format are
-unchanged from the standalone tool.
+download. The comparison below was verified directly against Sysmon
+v14.16 running both ways on the same hardware.
 
-This pattern remains applicable regardless of which Sysmon you run.
-Native integration addresses binary installation and updates; it does
-not change how configuration is delivered. Configuration is still applied
-with `sysmon -c` and still requires distribution to endpoints through
-Group Policy, Intune, or another management platform, which is the
-problem this pattern solves. The one operational difference worth
-knowing: Microsoft does not support running built-in and standalone
-Sysmon side by side on the same device, so environments migrating to
-the native feature should uninstall any existing standalone installation
-first.
+| | Standalone (Sysinternals) | Native (Windows optional feature) |
+|---|---|---|
+| Command syntax (`-i`, `-c`, `-m`, `-s`, `-u`) | Identical | Identical |
+| Event channel and event schema | `Microsoft-Windows-Sysmon/Operational` | Same channel, same schema |
+| Configuration format | XML, same schema version | Identical |
+| Registry storage of compiled config | `HKLM\SYSTEM\CurrentControlSet\Services\SysmonDrv\Parameters\Rules` (`REG_BINARY`) | Same path, same value name and type |
+| Driver/service name | `SysmonDrv` | Identical |
+| Reboot required for install/uninstall | No | No |
+| Acquisition | Manual download from Sysinternals | Windows optional feature (DISM), staged in `System32` |
+| Binary updates | Manual re-download | Delivered via Windows Update |
+| Lifecycle states | Two: absent or installed | Three: disabled, enabled (staged, not yet running), installed |
+| EULA on install | Required (`-accepteula` or interactive prompt) | None observed |
+| `-?` help text | Shows version banner, author credit, copyright, Sysinternals link | Same flags and usage text, but no version number or branding shown anywhere |
+| Binary filename | `Sysmon.exe` (32-bit) / `Sysmon64.exe` (64-bit) | `sysmon.exe` only, no `64` suffix despite being the 64-bit-capable build |
+| Coexistence | N/A | Cannot run alongside a standalone install on the same device |
+| Platform requirement | Any supported Windows version | Windows 11 24H2+ / Server 2025, plus KB5079473 |
+
+**The one-line summary:** everything that defines how this pattern works
+(the config format, the `sysmon -c` command, the registry location, the
+event channel) is identical. Everything that differs is about how the
+tool arrives on the machine and how its own lifecycle is tracked, not
+about how it's configured once installed. Native Sysmon has a three-state
+lifecycle standalone doesn't: `Get-WindowsOptionalFeature` reporting
+`State: Enabled` only means the binary is staged in `System32`; `sysmon -c`
+will still report "Sysmon is not installed on this computer" until
+`sysmon -i` is run explicitly, which is what actually registers the
+service, driver, registry key, and event channel.
+
+This pattern remains applicable regardless of which Sysmon is running.
+Configuration is still applied with `sysmon -c` and still requires
+distribution to endpoints through Group Policy, Intune, or another
+management platform, which is the problem this pattern solves. One
+open item: native Sysmon's `-?` output shows no version number, so the
+exact build baked into a given Windows release isn't confirmable from
+the CLI alone (the "Sysmon schema version: 4.91" seen during install is
+a configuration schema version, not the tool's own version). Native
+Sysmon requires Windows 11 24H2 or later plus KB5079473; on earlier
+builds, including 23H2, the optional feature does not exist, and
+`Get-WindowsOptionalFeature` returns an empty result rather than an
+error.
 
 ---
 
