@@ -1,0 +1,5 @@
+{
+  "EventID": 846,
+  "LogName": "Microsoft-Windows-BitLocker/BitLocker Management",
+  "Message": "Failed to backup BitLocker Drive Encryption recovery information for volume D: to your Azure AD. TracId: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}"
+}
