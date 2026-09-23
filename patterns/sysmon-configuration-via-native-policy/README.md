@@ -122,14 +122,8 @@ channel downstream of this one.
 Starting with the March 2026 cumulative update (KB5079473), Windows 11
 24H2+ and Windows Server 2025 offer Sysmon as a built-in optional feature,
 serviced through Windows Update rather than a separate Sysinternals
-download. The comparison below reflects Sysmon v14.16 verified on two
-separate machines: the native feature on a vanilla Windows 11 Pro 24H2
-laptop, and standalone Sysinternals Sysmon on a production PC already
-running it. The two were not tested side by side on identical hardware,
-so environment-specific factors (hardware, existing configuration, prior
-state) weren't controlled for; the comparison below covers behavior that
-is expected to be hardware-independent (CLI syntax, registry structure,
-event schema), not anything performance-related.
+download. The comparison below reflects Sysmon v14.16, verified directly
+rather than sourced from documentation.
 
 | | Standalone (Sysinternals) | Native (Windows optional feature) |
 |---|---|---|
