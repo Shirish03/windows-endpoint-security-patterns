@@ -142,30 +142,36 @@ rather than sourced from documentation.
 | Coexistence | N/A | Cannot run alongside a standalone install on the same device |
 | Platform requirement | Any supported Windows version | Windows 11 24H2+ / Server 2025, plus KB5079473 |
 
-**The one-line summary:** everything that defines how this pattern works
-(the config format, the `sysmon -c` command, the registry location, the
-event channel) is identical. Everything that differs is about how the
-tool arrives on the machine and how its own lifecycle is tracked, not
-about how it's configured once installed. Native Sysmon has a three-state
-lifecycle standalone doesn't: `Get-WindowsOptionalFeature` reporting
-`State: Enabled` only means the binary is staged in `System32`; `sysmon -c`
-will still report "Sysmon is not installed on this computer" until
-`sysmon -i` is run explicitly, which is what actually registers the
-service, driver, registry key, and event channel.
+**What this means in practice:**
 
-This pattern remains applicable regardless of which Sysmon is running.
-Configuration is still applied with `sysmon -c` and still requires
-distribution to endpoints through Group Policy, Intune, or another
-management platform, which is the problem this pattern solves. One
-open item: native Sysmon's `-?` output shows no version number, so the
-exact build baked into a given Windows release isn't confirmable from
-the CLI alone (the "Sysmon schema version: 4.91" seen during install is
-a configuration schema version, not the tool's own version). Native
-Sysmon requires Windows 11 24H2 or later plus KB5079473; on earlier
-builds, including 23H2, the optional feature does not exist, and
-`Get-WindowsOptionalFeature` returns an empty result rather than an
-error.
+- **Everything that defines how this pattern works is identical** between
+  standalone and native Sysmon: the configuration format, the `sysmon -c`
+  command, the registry location, and the event channel. Everything that
+  differs is about how the tool arrives on the machine and how its own
+  lifecycle is tracked, not about how it's configured once installed.
 
+- **Native Sysmon's staging step is easy to misread.** Enabling the
+  feature only places the `sysmon.exe` binary in `System32` — it does
+  not install or start anything. The driver, service, registry key, and
+  event channel are only created when `sysmon -i` is run explicitly.
+  Until that happens, `sysmon -c` will still report "Sysmon is not
+  installed on this computer," even though `Get-WindowsOptionalFeature`
+  already shows `State: Enabled`.
+
+- **This pattern remains applicable regardless of which Sysmon is
+  running.** Configuration is still applied with `sysmon -c` and still
+  requires distribution to endpoints through Group Policy, Intune, or
+  another management platform, which is the problem this pattern solves.
+
+- **Open item:** native Sysmon's `-?` output shows no version number, so
+  the exact build baked into a given Windows release isn't confirmable
+  from the CLI alone. The "Sysmon schema version: 4.91" seen during
+  install is a configuration schema version, not the tool's own version.
+
+- **Platform requirement:** Windows 11 24H2 or later plus KB5079473. On
+  earlier builds, including 23H2, the optional feature does not exist,
+  and `Get-WindowsOptionalFeature` returns an empty result rather than
+  an error.
 ---
 
 ### Key Observation
