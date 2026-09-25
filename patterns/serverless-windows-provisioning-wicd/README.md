@@ -26,9 +26,9 @@ and failure handling.
 
 ### The Problem in Plain Terms
 
-Not every organisation can adopt cloud-native provisioning immediately.
+Not every organization can adopt cloud-native provisioning immediately.
 SMB environments, regulated environments with network restrictions,
-offline deployment scenarios, and organisations in transitional states
+offline deployment scenarios, and organizations in transitional states
 all need a secure provisioning path that does not depend on deployment
 infrastructure, cloud connectivity, or pre-registered hardware hashes.
 
@@ -60,25 +60,16 @@ own. USB-based re-imaging, manual setup, or community scripts fill the
 gap, without the security controls, audit trail, or change management
 that a governed provisioning approach provides.
 
-**Framework alignment**
-Several widely adopted frameworks address the requirement for consistent,
-verifiable device configuration at the point of provisioning:
-
-- **NIST CSF Protect function (PR.IP-1)** requires that a baseline
-  configuration is established and maintained for all managed systems. A
-  provisioning process that varies by technician or by deployment
-  scenario cannot produce a consistent, auditable baseline.
-- **CIS Control 4** (Secure Configuration of Enterprise Assets and
-  Software) requires that secure configurations are established and
-  actively managed. Provisioning packages enforce this at setup time,
-  before the device enters the estate.
-- **ISO/IEC 27001 Annex A 8.9** (Configuration management) requires
-  that configurations of hardware and software are established,
-  documented, and maintained. A versioned, signed provisioning package
-  is a directly auditable configuration artifact for this control.
-
-This document does not constitute legal or compliance advice; organisations
-should assess applicability to their specific regulatory and contractual
+**Why this matters beyond convenience**
+Consistent, verifiable device configuration at the point of provisioning
+is treated as a baseline security control requirement in most audit and
+compliance programs, independent of which framework an organization
+follows. A provisioning process that varies by technician or by
+deployment scenario cannot produce a consistent, auditable baseline, and
+a versioned, signed provisioning package is a directly auditable
+configuration artifact in a way ad hoc setup never is. This document
+does not constitute legal or compliance advice; organizations should
+assess applicability to their specific regulatory and contractual
 obligations independently.
 
 ---
@@ -121,18 +112,18 @@ deployment servers, imaging pipelines, or long-running agents.
 flowchart TB
     A["New Windows device\nneeds provisioning"]
     B{"Hardware hash\nenrolled in Autopilot?"}
-    C["🏆 Use Windows Autopilot\nFull cloud-native flow\nIntune-managed from day one"]
+    C["Use Windows Autopilot\nFull cloud-native flow\nIntune-managed from day one"]
     D{"Stable internet\nat deployment site?"}
-    E["✅ This pattern applies\nServerless WICD provisioning\nNo infrastructure required"]
+    E["This pattern applies\nServerless WICD provisioning\nNo infrastructure required"]
     F{"On-premises AD\nand SCCM available?"}
-    G["🏢 Use traditional imaging\nPXE / task sequence\nOn-premises domain join"]
+    G["Use traditional imaging\nPXE / task sequence\nOn-premises domain join"]
     H{"Intune enrollment\nwithout Autopilot feasible?"}
-    I["☁ Use Intune enrollment\nCloud join without\nAutopilot hardware hash"]
+    I["Use Intune enrollment\nCloud join without\nAutopilot hardware hash"]
 
     A --> B
     B -->|Yes| C
     B -->|No| D
-    D -->|"No — offline / lab"| E
+    D -->|"No: offline / lab"| E
     D -->|Yes| F
     F -->|Yes| G
     F -->|No| H
@@ -185,7 +176,7 @@ deterministically at every provisioning event.
 **Why not Autopilot for all scenarios?**
 Autopilot requires hardware hash pre-registration, internet connectivity
 at enrollment time, and an active Intune subscription with appropriate
-licensing. For offline deployments, lab environments, or organisations
+licensing. For offline deployments, lab environments, or organizations
 not yet on Intune, these dependencies are not always satisfiable. WICD
 provisioning has none of them.
 
@@ -277,7 +268,7 @@ Review for any provisioning errors during OOBE.
 
 | File | Purpose |
 |---|---|
-| `docs/provisioning-flow.md` | Step-by-step walkthrough of the WICD provisioning flow from package creation through OOBE to first login; includes per-component runtime behaviour notes and failure handling |
+| `docs/provisioning-flow.md` | Step-by-step walkthrough of the WICD provisioning flow from package creation through OOBE to first login; includes per-component runtime behavior notes and failure handling |
 
 ---
 
@@ -374,11 +365,18 @@ a recoverable encryption state.
 
 ---
 
+## Related Patterns
+
+- **[BitLocker-to-Go Recovery Key Escrow](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/hybrid-entra-btg-key-escrow-pattern)**: this pattern enables BitLocker and triggers the initial recovery key escrow to Entra ID during OOBE provisioning. That pattern is the compensating control for the same escrow mechanism later in the device's life, when a user encrypts a removable drive with BitLocker-to-Go and that specific escrow path fails silently.
+- **[SCEP Certificate Enrollment via Internal NDES](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/scep-certificate-enrollment-internal-ndes)**: a device provisioned here completes Entra ID join during setup. When that join is Entra ID Join Only rather than Hybrid, a realistic outcome for offline or infrastructure-light provisioning, the resulting device is exactly the population that pattern's certificate enrollment was built for.
+
+---
+
 ## Disclaimer
 
 This pattern is provided as reference material and design guidance. It
 has been validated in offline and infrastructure-light lab scenarios on
-Windows 10 22H2 and Windows 11. Provisioning package behaviour may vary
+Windows 10 22H2 and Windows 11. Provisioning package behavior may vary
 depending on Windows ADK version, hardware configuration, and target OS
 build.
 
