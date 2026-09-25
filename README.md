@@ -5,19 +5,23 @@
 ![Platform: Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)
 ![Environment: Hybrid Entra ID](https://img.shields.io/badge/Environment-Hybrid%20Entra%20ID-5C2D91?logo=microsoftazure)
 
-A practitioner's reference for endpoint security automation in hybrid Entra ID
-and cloud-managed Windows environments.
+A practitioner's reference for Windows endpoint security patterns across
+on-premises Group Policy, Hybrid Entra ID, and cloud-native Intune
+environments, each one built to close a real gap in the standard tooling.
 
 ## Why This Exists
 
-During enterprise endpoint modernization, several security controls that worked
-reliably in on-premises AD environments either broke silently or had no supported
-equivalent in Hybrid Entra ID and Intune-managed configurations. BitLocker-to-Go
-recovery key escrow to Entra ID was one such control; policy was correctly configured, no
-errors surfaced in Intune, and failures were only visible if you knew which
-Windows event log to watch. This repository documents those gaps and the
-event-driven, operationally practical approaches used to close them without
-introducing new infrastructure or weakening the platform's security model.
+During enterprise endpoint modernization, security controls that work
+reliably under one management model often have no clean equivalent under
+another. BitLocker-to-Go recovery key escrow to Entra ID was one such case:
+policy was correctly configured, Intune reported no errors, and the failure
+was only visible if you knew which Windows event log to check. The same kind
+of gap shows up in reverse too, controls built for on-premises Group Policy
+that still have to coexist with Intune, or environments with neither
+Autopilot nor traditional imaging infrastructure available at all. This
+repository documents those gaps and the event-driven, operationally
+practical approaches used to close them without introducing new
+infrastructure or weakening the platform's security model.
 
 ## Who This Is For
 
@@ -74,7 +78,7 @@ These patterns were developed and validated against:
 - Group Policy infrastructure present (required for the Sysmon and WEF patterns)
 
 Pattern 04 (SCEP Certificate Enrollment via Internal NDES) is the exception to the Hybrid Entra ID
-assumption above — it specifically targets Entra ID Join Only Windows and macOS devices, which have
+assumption above, it specifically targets Entra ID Join Only Windows and macOS devices, which have
 no on-premises AD computer object. See that pattern's README for full scope details.
 
 Patterns may apply in broader configurations but have not been validated
