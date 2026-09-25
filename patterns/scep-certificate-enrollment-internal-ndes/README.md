@@ -34,10 +34,10 @@ reachable by the Intune cloud service. The path of least resistance in
 most deployment guides is to expose NDES directly to the internet.
 
 The consequence of that choice is an internet-facing endpoint that sits
-one step from the organisation's certificate infrastructure. NDES does not
+one step from the organization's certificate infrastructure. NDES does not
 issue certificates itself, but it does broker requests to the CA. A
 compromised or abused NDES service can be used to request certificates
-against the organisation's PKI, potentially enabling fraudulent
+against the organization's PKI, potentially enabling fraudulent
 authentication, lateral movement, or persistent access using certificates
 that are trusted by the environment's own systems.
 
@@ -45,8 +45,8 @@ The failure mode is not hypothetical. NDES has a documented history of
 vulnerabilities, and an internet-exposed instance provides an
 unauthenticated attack surface against what should be one of the most
 protected components of the environment. The risk is amplified in
-organisations that rely on certificate-based authentication for Wi-Fi,
-VPN, or device identity, where a certificate issued to an unauthorised
+organizations that rely on certificate-based authentication for Wi-Fi,
+VPN, or device identity, where a certificate issued to an unauthorized
 party grants real access.
 
 ---
@@ -57,12 +57,12 @@ party grants real access.
 An internet-exposed NDES server creates a CA-adjacent attack surface with
 no dependency on corporate network access. Exploitation of the service
 (whether through vulnerability, misconfiguration, or credential abuse)
-can result in fraudulent certificate issuance against the organisation's
+can result in fraudulent certificate issuance against the organization's
 internal PKI. Certificates issued this way inherit the trust of the CA
 and are not distinguishable from legitimately enrolled device certificates.
 
 **Certificate-based authentication failure risk**
-Many organisations rely on certificates for authentication to Wi-Fi
+Many organizations rely on certificates for authentication to Wi-Fi
 networks, VPN, and cloud services. The certificate infrastructure is
 therefore a dependency of network access itself. Disruption or compromise
 of NDES (whether through an attack or through operational failure) can
@@ -80,15 +80,15 @@ restores the boundary; only the connector, operating within the trusted
 perimeter, communicates with NDES, and Intune enforces compliance posture
 before any certificate is issued.
 
-**Framework alignment**
-NIST CSF Protect function (PR.AC) addresses access control and identity
-management, including the requirement that only authorised devices and
-users obtain credentials. NIST SP 800-207 (Zero Trust Architecture)
-establishes the principle that access decisions should be made with full
-context of device compliance and identity, a principle undermined when
-certificate enrollment is available to any internet host. This document
-does not constitute legal or compliance advice; organisations should
-assess applicability to their specific obligations.
+**Why this matters beyond convenience**
+Access control and identity management programs generally require that
+only authorized devices and users obtain credentials, and that access
+decisions account for the full context of device compliance and
+identity, independent of which framework an organization follows. That
+principle is undermined when certificate enrollment is reachable by any
+internet host rather than gated behind compliance and identity checks.
+This document does not constitute legal or compliance advice;
+organizations should assess applicability to their specific obligations.
 
 ---
 
@@ -151,7 +151,7 @@ different mechanisms:
   SCEP profile in the first place. The profile contains the SCEP URL
   pointing to the Certificate Connector.
 - **Network gate.** That SCEP URL is an **internal DNS alias** (a CNAME)
-  that resolves only on the organisation's network. It does not exist in
+  that resolves only on the organization's network. It does not exist in
   public DNS. A device that somehow obtained the URL without going
   through Intune still could not resolve it from the internet.
 
@@ -178,7 +178,7 @@ intentionally empty: there is nothing for an attacker to find there.
 | ⑦ | Issuing CA → Domain Controller: Kerberos/LDAP authentication |
 | ⑧ | Issuing CA → NDES: certificate issued and returned (RPC/DCOM) |
 | ⑩ | Certificate Connector → device: certificate delivered (same path as ② / ②c, reversed) |
-| — | Root CA ↔ Issuing CA: PKI trust chain / CRL distribution (always active) |
+| N/A | Root CA ↔ Issuing CA: PKI trust chain / CRL distribution (always active) |
 
 ---
 
@@ -214,7 +214,7 @@ Common ZTNA products that follow this broker model:
   product, integrated with Entra ID and the Global Secure
   Access client
 
-If the organisation does not have a ZTNA product, remote
+If the organization does not have a ZTNA product, remote
 devices can alternatively reach the Certificate Connector
 via a corporate VPN; the connector only requires internal
 network reachability, however that is achieved. ZTNA is the
@@ -249,7 +249,7 @@ of the solution.
 
 **Intune** owns compliance enforcement and policy. It decides which
 devices are eligible to receive a certificate, issues the credential
-(challenge password) that authorises a specific enrollment event, and
+(challenge password) that authorizes a specific enrollment event, and
 delivers the issued certificate to the device. Intune does not validate
 the CSR itself; it passes the request through.
 
@@ -279,7 +279,7 @@ it does not meet template requirements.
 | Principle | Description |
 |---|---|
 | **No inbound internet exposure** | The Certificate Connector v2 uses outbound-only connectivity; NDES receives no direct internet traffic |
-| **Internal DNS alias for the SCEP endpoint** | The SCEP URL is a CNAME that resolves only on the organisation's network; it does not exist in public DNS, so the URL is useless to a host outside the perimeter even if obtained |
+| **Internal DNS alias for the SCEP endpoint** | The SCEP URL is a CNAME that resolves only on the organization's network; it does not exist in public DNS, so the URL is useless to a host outside the perimeter even if obtained |
 | **Two independent gates** | Policy gate: only enrolled, compliant devices receive the SCEP profile. Network gate: the SCEP URL only resolves internally. Both must hold for enrollment to succeed |
 | **Private key stays on device** | The RSA key pair is generated on the endpoint; the private key is never transmitted |
 | **Policy enforced at issuance** | The CA applies template constraints independently, providing a further validation layer at the PKI itself |
@@ -317,9 +317,9 @@ SCEP with an internal NDES is the appropriate model for device identity
 certificates.
 
 **Why not cloud-only PKI (Microsoft Cloud PKI)?**
-Microsoft Cloud PKI is a viable path for organisations moving to fully
+Microsoft Cloud PKI is a viable path for organizations moving to fully
 cloud-managed endpoints with no dependency on on-premises infrastructure.
-For organisations with an existing on-premises CA, established certificate
+For organizations with an existing on-premises CA, established certificate
 templates, and hybrid infrastructure, the internal NDES pattern preserves
 the existing PKI investment and avoids a CA migration. The choice between
 them is an infrastructure strategy decision, not a security one; both
@@ -455,12 +455,12 @@ there is no AD computer object for the device.
 
 **KB5014754 and strong mapping enforcement**
 
-Per [KB5014754 — Certificate-based authentication changes on Windows
+Per [KB5014754: Certificate-based authentication changes on Windows
 domain controllers](https://support.microsoft.com/en-us/topic/kb5014754-certificate-based-authentication-changes-on-windows-domain-controllers-ad2c23b0-15d8-4340-a468-4d4f3b188f16),
 domain controllers now enforce strong certificate mapping for
-certificate-based authentication. Weak mappings — subject name, issuer
-name, UPN, email — are being phased out and must not be relied on for
-new deployments.
+certificate-based authentication. Weak mappings, including subject name,
+issuer name, UPN, and email, are being phased out and must not be relied
+on for new deployments.
 
 For Entra ID Join Only Windows devices and macOS devices, any on-premises
 authentication scenario requiring certificate-based auth against Active
@@ -474,9 +474,9 @@ requires on-premises certificate-based authentication.
 
 The SCEP profile for Entra ID Join Only Windows devices and macOS devices
 must be configured separately from any profile used for Hybrid Entra ID
-joined Windows devices. The SAN must use an alternative configuration
-— such as `IntuneDeviceId://{{DeviceId}}` as a URI SAN (see
-[`examples/scep-profile-sample.md`](examples/scep-profile-sample.md)) —
+joined Windows devices. The SAN must use an alternative configuration, such as
+`IntuneDeviceId://{{DeviceId}}` as a URI SAN (see
+[`examples/scep-profile-sample.md`](examples/scep-profile-sample.md)),
 rather than `{{OnPremisesSecurityIdentifier}}`.
 
 ---
@@ -681,6 +681,12 @@ connectivity-related. Check:
 
 ---
 
+## Related Patterns
+
+- **[Serverless Windows Provisioning with WICD](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/serverless-windows-provisioning-wicd)**: a device provisioned through that pattern completes Entra ID join during setup. When that join is Entra ID Join Only rather than Hybrid, which is a common outcome for offline or infrastructure-light provisioning, the resulting device is exactly the population this pattern's certificate enrollment addresses: no on-premises AD computer object, and no `{{OnPremisesSecurityIdentifier}}` to rely on.
+
+---
+
 ## Disclaimer
 
 This solution is provided as a reference implementation and design
@@ -690,6 +696,6 @@ other environments.
 
 There is no guarantee that this approach will function identically in
 all environments. Administrators should review, test, and validate
-behaviour in a controlled setting before any production use.
+behavior in a controlled setting before any production use.
 
 Use at your own discretion.
