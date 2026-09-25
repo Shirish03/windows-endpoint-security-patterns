@@ -9,6 +9,8 @@ A practitioner's reference for Windows endpoint security patterns across
 on-premises Group Policy, Hybrid Entra ID, and cloud-native Intune
 environments, each one built to close a real gap in the standard tooling.
 
+By Shirish Mistry · Associate Principal, Endpoint Security & Architecture · [LinkedIn](https://www.linkedin.com/in/shirish1)
+
 ## Why This Exists
 
 During enterprise endpoint modernization, security controls that work
@@ -37,7 +39,7 @@ and where the answer to a security gap is not always "wait for a platform update
 | 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Entra ID half of dual-destination escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
-| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices without exposing internal PKI | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
+| 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices, without exposing internal PKI and without relying on `{{OnPremisesSecurityIdentifier}}`, which does not resolve once KB5014754 strong-mapping enforcement is in effect and the device has no on-premises AD computer object | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
 | 05 | [Windows Event Forwarding: Categorized Collection](patterns/windows-event-forwarding-categorized-collection) | Mixed-category security, Sysmon, Defender, and firewall events crowd a single forwarded-events channel, complicating SIEM ingestion and scaling | GPO / Policy-managed |
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
