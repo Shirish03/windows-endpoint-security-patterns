@@ -42,7 +42,7 @@ the data is permanently unrecoverable.
 **Data recoverability**
 Recovery key escrow is not a compliance checkbox; it is the mechanism
 that makes encrypted data recoverable. When escrow silently fails, the
-organisation holds encrypted removable drives with no administrative
+organization holds encrypted removable drives with no administrative
 path to recovery. A single hardware failure, forgotten password, or
 staff departure involving an unescrowable drive results in permanent
 data loss. The risk is proportional to the sensitivity of data users
@@ -51,25 +51,23 @@ place on removable media and the scale of the affected device population.
 **What a compliance assessor would find**
 The Group Policy and Intune configurations that require recovery key
 backup to Entra ID may be correctly deployed and will appear compliant
-during a policy review. The failure is behavioural, not configurational.
+during a policy review. The failure is behavioral, not configurational.
 An assessor validating the control end-to-end (by checking whether
 recovery keys are actually present in Entra ID for enrolled devices)
 would find the keys absent. The control is configured but not
 functioning, which is a more difficult finding to remediate than a
 missing policy.
 
-**Framework alignment**
-Several widely adopted frameworks treat recovery key management as a
-component of cryptographic control assurance. NIST CSF Protect function
-(PR.DS) requires that data at rest is protected and that protection
-mechanisms are verified. ISO/IEC 27001 Annex A control A.8.24 addresses
-the use of cryptography and the management of cryptographic keys.
-General data protection principles, including those underpinning
-regional data protection legislation, require that technical controls
-protecting personal data are effective in practice, not merely in
-configuration. Silent escrow failure creates a gap that is relevant
-across all of these. This document does not constitute legal or
-compliance advice; organisations should assess applicability to their
+**Why this matters beyond convenience**
+Recovery key management is treated as a component of cryptographic
+control assurance in most audit and compliance programs, independent of
+which framework an organization follows. General data protection
+principles, including those underpinning regional data protection
+legislation, require that technical controls protecting personal data
+are effective in practice, not merely in configuration. Silent escrow
+failure creates exactly that gap: a control that looks correct on paper
+and does nothing in practice. This document does not constitute legal or
+compliance advice; organizations should assess applicability to their
 specific obligations.
 
 ---
@@ -420,6 +418,12 @@ re-deployed as part of the build process.
 | Network connectivity | Task is configured to require network availability; if offline at trigger time, no retry is attempted for that event |
 | BitLocker RecoveryPassword protector | Target volume must have a RecoveryPassword protector type; other protector types are not covered |
 | SYSTEM account access | Task runs as SYSTEM; this account must retain access to BitLocker APIs on the device |
+
+---
+
+## Related Patterns
+
+- **[Serverless Windows Provisioning with WICD](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/serverless-windows-provisioning-wicd)**: enables BitLocker and triggers the initial recovery key escrow to Entra ID during OOBE provisioning. This pattern is the compensating control for the same escrow mechanism later in the device's life, when a user encrypts a removable drive with BitLocker-to-Go and that specific escrow path fails silently. Different lifecycle moment, same underlying platform behavior.
 
 ---
 
