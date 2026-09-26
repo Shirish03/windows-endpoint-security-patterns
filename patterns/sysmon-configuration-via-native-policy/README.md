@@ -131,13 +131,16 @@ rather than sourced from documentation.
 | Event channel and event schema | `Microsoft-Windows-Sysmon/Operational` | Same channel, same schema |
 | Configuration format | XML, same schema version | Identical |
 | Registry storage of compiled config | `HKLM\SYSTEM\CurrentControlSet\Services\SysmonDrv\Parameters\Rules` (`REG_BINARY`) | Same path, same value name and type |
-| Driver/service name | `SysmonDrv` | Identical |
+| Kernel driver name | `SysmonDrv` | Identical |
+| User-mode service name | `Sysmon64` (64-bit build) or `Sysmon` (32-bit build) | `Sysmon`, the same name the 32-bit standalone build uses, despite native being the 64-bit-capable build |
+| Service binary path | `C:\Windows\Sysmon64.exe` or `C:\Windows\Sysmon.exe` | `C:\Windows\System32\sysmon.exe` |
 | Reboot required for install/uninstall | No | No |
 | Acquisition | Manual download from Sysinternals | Windows optional feature (DISM), staged in `System32` |
 | Binary updates | Manual re-download | Delivered via Windows Update |
 | Lifecycle states | Two: absent or installed | Three: disabled, enabled (staged, not yet running), installed |
 | EULA on install | Required (`-accepteula` or interactive prompt) | None observed |
 | `-?` help text | Shows version banner, author credit, copyright, Sysinternals link | Same flags and usage text, but no version number or branding shown anywhere |
+| Confirming the installed version | The `-?` banner itself: for example "System Monitor v14.16" | Not shown by `-?`. Read `(Get-Item C:\Windows\System32\sysmon.exe).VersionInfo` instead, which returns a Windows OS-build-style version (`10.0.26100.8521` on a 25H2 test build), not the Sysinternals-style numbering (`14.16`) standalone uses |
 | Binary filename | `Sysmon.exe` (32-bit) / `Sysmon64.exe` (64-bit) | `sysmon.exe` only, no `64` suffix despite being the 64-bit-capable build |
 | Coexistence | N/A | Cannot run alongside a standalone install on the same device |
 | Platform requirement | Any supported Windows version | Windows 11 24H2+ / Server 2025, plus KB5079473 |
@@ -162,10 +165,45 @@ Here is what that means in practice.
   distribution to endpoints via Group Policy, Intune, or another
   management platform, which is the problem this pattern solves.
 
-- Native Sysmon's `-?` output carries no version number, so there is no
-  way to confirm the exact build from the CLI alone. The "Sysmon schema
-  version: 4.91" printed during install is a configuration schema
-  version, not the tool's own version.
+- Native Sysmon's `-?` output still carries no version number, but the
+  binary's own file version is readable directly:
+  `(Get-Item C:\Windows\System32\sysmon.exe).VersionInfo`. It comes back
+  in Windows OS-build format, not the Sysinternals-style numbering
+  standalone uses, so the two numbering schemes aren't directly
+  comparable. A version-based inventory or compliance rule written
+  against the Sysinternals numbering needs a separate rule for native.
+  The "Sysmon schema version: 4.91" printed during install is a
+  configuration schema version, a third and separate number again, not
+  the tool's own version.
+
+- Detection logic that keys off service name alone will misclassify
+  native Sysmon as the 32-bit standalone build, because native reuses
+  that exact service name (`Sysmon`). Classify by the service's image
+  path instead: `System32\sysmon.exe` is native, `Sysmon.exe` or
+  `Sysmon64.exe` directly under `Windows` is standalone.
+
+- The `ConfigFile` registry value records the full path native Sysmon
+  was installed from. If that install ran from a temporary staging
+  location, an SCCM cache folder or a mapped deployment share, the
+  value ends up pointing at a path that no longer exists once the
+  install finishes. This is harmless functionally, since `Rules` is
+  what Sysmon actually reads at runtime, but it can mislead an audit
+  that expects `ConfigFile` to resolve to something real.
+
+- Migrating a single endpoint from standalone to native means an
+  unavoidable window with no Sysmon monitoring at all, since the two
+  can't coexist. Measured directly across one uninstall-then-reinstall
+  cycle, that window was about six seconds. A fleet migration needs its
+  own tested, gated procedure, not just `sysmon -u` followed by
+  `sysmon -i`; that is a separate piece of work from this pattern's
+  configuration-delivery scope.
+
+- One thing not yet confirmed: whether a `Rules` registry blob compiled
+  by one flavor is valid when read by the other, given the two use
+  different, non-comparable version numbers. Until that's verified,
+  treat a reference system's compiled artifact as flavor-specific
+  rather than assuming it's interchangeable across a mixed standalone
+  and native fleet.
 
 - On builds earlier than 24H2, including 23H2, the optional feature
   doesn't exist at all, and `Get-WindowsOptionalFeature` returns an
@@ -246,7 +284,7 @@ for how to monitor and mitigate it in practice.
 
 | Requirement | Detail |
 |---|---|
-| **Sysmon** | Installed and running on reference system; version consistent with target endpoints |
+| **Sysmon** | Installed and running on reference system; version consistent with target endpoints. If the fleet mixes standalone and native Sysmon, use a reference system of the same flavor as the target: the two use non-comparable version-numbering schemes, and `Rules` blob compatibility across flavors is not yet confirmed (see [A Note on Native Sysmon](#a-note-on-native-sysmon-as-of-september-2026)) |
 | **Reference system** | Domain-joined Windows 10/11 or Server; used for config validation and registry extraction |
 | **Policy infrastructure** | Group Policy (domain-joined) or Intune Policy CSP (Intune-managed) |
 | **PowerShell** | Windows PowerShell 5.1 for extraction script |
