@@ -23,7 +23,10 @@ that still have to coexist with Intune, or environments with neither
 Autopilot nor traditional imaging infrastructure available at all. This
 repository documents those gaps and the event-driven, operationally
 practical approaches used to close them without introducing new
-infrastructure or weakening the platform's security model.
+infrastructure or weakening the platform's security model. The same rigor
+applies when a tool itself is being replaced, not just reconfigured: Pattern
+06 documents a gated cutover from a long-standing third-party tool to its
+native platform equivalent, so the transition itself doesn't become the gap.
 
 ## Who This Is For
 
@@ -41,6 +44,7 @@ and where the answer to a security gap is not always "wait for a platform update
 | 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
 | 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices, without exposing internal PKI and without relying on `{{OnPremisesSecurityIdentifier}}`, which does not resolve once KB5014754 strong-mapping enforcement is in effect and the device has no on-premises AD computer object | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
 | 05 | [Windows Event Forwarding: Categorized Collection](patterns/windows-event-forwarding-categorized-collection) | Mixed-category security, Sysmon, Defender, and firewall events crowd a single forwarded-events channel, complicating SIEM ingestion and scaling | GPO / Policy-managed |
+| 06 | [Migrating Standalone Sysmon to Native Windows Sysmon](patterns/sysmon-migration-standalone-to-native) | Gated cutover from Sysinternals Sysmon to the Windows 11 native optional feature, with no monitoring gap that goes unnoticed | Windows 11 24H2+ / Server 2025, packaged for endpoint deployment |
 
 Each pattern in this repository is structured in four layers to serve different audiences. The Strategic Overview provides risk context and architectural recommendation for security architects and IT leadership. The Architecture & Design section covers the technical model and design rationale. The Implementation Reference contains configuration details and deployment guidance for engineers. The Operational Guidance section covers monitoring, failure modes, and maintenance for operations teams.
 
@@ -82,6 +86,11 @@ These patterns were developed and validated against:
 Pattern 04 (SCEP Certificate Enrollment via Internal NDES) is the exception to the Hybrid Entra ID
 assumption above, it specifically targets Entra ID Join Only Windows and macOS devices, which have
 no on-premises AD computer object. See that pattern's README for full scope details.
+
+Pattern 06 (Migrating Standalone Sysmon to Native Windows Sysmon) is a separate exception: it
+requires Windows 11 24H2+ or Windows Server 2025 with the March 2026 cumulative update, and was
+validated and packaged for delivery through a general-purpose software deployment tool rather than
+Group Policy or Intune directly. See that pattern's README for full scope details.
 
 Patterns may apply in broader configurations but have not been validated
 outside this context.
