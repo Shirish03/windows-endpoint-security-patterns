@@ -13,11 +13,11 @@
 
 Windows 11 24H2 and Windows Server 2025, with the March 2026 cumulative update (KB5079473) or later, ship Sysmon as a built-in optional feature. This pattern documents the cutover from standalone Sysinternals Sysmon to that native feature: the gated sequence that makes the switch safe on a running fleet, what actually happens to monitoring coverage during the switch, and how to recover when it doesn't go cleanly.
 
-The case for migrating is servicing and support, not obsolescence. Standalone Sysmon isn't being deprecated. The Sysinternals build is still actively maintained and has, if anything, moved ahead in version number while fleets running standalone tend to sit further behind, since someone has to notice a new release and push the binary. Native Sysmon updates through the normal Windows Update cycle instead: security fixes land in the monthly release, and feature work goes out through preview updates first. Microsoft states that configuration survives a native binary update without needing to be reapplied. Microsoft has also been direct about the other half of the case: there's no official customer support path for running Sysmon in production as a third-party download, however well-established the tool is. Native Sysmon has one.
+Standalone Sysmon isn't being deprecated, and the Sysinternals build is still actively maintained. If anything, its version number runs ahead of what most fleets are actually running, since keeping standalone current means someone has to notice each release and push the binary out. Native Sysmon updates through the normal Windows Update cycle instead: security fixes land in the monthly release, feature work goes out through preview updates first, and [Microsoft states](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) configuration survives a binary update without needing to be reapplied. There's also no official customer support path for running Sysmon in production as a third-party download, however well established the tool is; native Sysmon has one, and that's really what makes the migration worth doing now rather than later.
 
-The two builds cannot run side by side. Microsoft doesn't support coexistence, and both register their kernel driver under the same name (`SysmonDrv`). So this is a real cutover (uninstall one, install the other), not a phased rollout where both run in parallel for a while. That constraint is what shapes everything else in this pattern: the migration has to be gated tightly enough that a machine never ends up in a state where neither build is running and nobody knows it.
+The two builds cannot run side by side. [Microsoft doesn't support coexistence](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview), and both register their kernel driver under the same name (`SysmonDrv`). So this is a real cutover (uninstall one, install the other), not a phased rollout where both run in parallel for a while. That constraint is what shapes everything else in this pattern: the migration has to be gated tightly enough that a machine never ends up in a state where neither build is running and nobody knows it.
 
-This pattern also marks a deliberate departure from [Registry-Based Sysmon Configuration Deployment](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-configuration-via-native-policy), the pattern that got this fleet's standalone Sysmon configuration under policy control in the first place. That pattern pushes the compiled `Rules` registry value through Group Policy so configuration changes roll out without repackaging anything. For native Sysmon, this fleet is not carrying that approach forward. Configuration is supplied once, at migration time, via `sysmon.exe -i <config>`. Later configuration changes go out as a separate `sysmon.exe -c <config>` package rather than through the registry. The decision was driven by the Group Policy refresh delay that pattern already documents as a tradeoff. Testing then surfaced a second reason: the compiled rules blob is not compatible between Sysmon binary versions. In testing between standalone 14.16 and native, a blob compiled by one was rejected by the other, and if a rejected blob is the one in place at boot, the native Sysmon service logs two Event ID 255 errors and exits within about five seconds. That finding is detailed in [Operational Guidance](#operational-guidance), because anyone tempted to point their existing registry-based delivery pipeline at a native-migrated fleet needs to see it before they do.
+This pattern also breaks from [Registry-Based Sysmon Configuration Deployment](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-configuration-via-native-policy), the pattern that got this fleet's standalone Sysmon configuration under policy control in the first place. That pattern pushes the compiled `Rules` registry value through Group Policy so configuration changes roll out without repackaging anything. For native Sysmon, this fleet is not carrying that approach forward. Configuration is supplied once, at migration time, via `sysmon.exe -i <config>`. Later configuration changes go out as a separate `sysmon.exe -c <config>` package rather than through the registry. The decision was driven by the Group Policy refresh delay that pattern already documents as a tradeoff. Testing then surfaced a second reason: the compiled rules blob is not compatible between Sysmon binary versions. In testing between standalone 14.16 and native, a blob compiled by one was rejected by the other, and if a rejected blob is the one in place at boot, the native Sysmon service logs two Event ID 255 errors and exits within about five seconds. That finding is detailed in [Operational Guidance](#operational-guidance), because anyone tempted to point their existing registry-based delivery pipeline at a native-migrated fleet needs to see it before they do.
 
 ## Architecture & Design
 
@@ -29,11 +29,11 @@ The design responds to that directly: nothing destructive happens until every pr
 
 ### The gated sequence
 
-1. **Pre-checks.** The config file exists and parses as valid XML. The `Sysmon` optional feature exists on this OS build at all (it won't on 23H2, or on 24H2 without the required cumulative update). An inventory of whatever Sysmon is currently installed, classified by the image path of its Windows service, not by service name. A machine already migrated with this exact config exits cleanly with no changes made.
+1. **Pre-checks.** Confirm the config file exists and is valid XML, that the `Sysmon` optional feature actually exists on this OS build (it won't on 23H2, or on 24H2 without the required cumulative update), and take inventory of whatever Sysmon is already installed, classified by service image path rather than service name. If a machine was already migrated with this exact config in an earlier run, this step catches it and the script exits here, cleanly, without touching anything.
 
 2. **Enable** the optional feature, skipped if it already reports Enabled.
 
-3. **Gate.** Three conditions have to hold before anything is removed: the feature reports exactly `Enabled`, no restart is pending, and `System32\sysmon.exe` actually exists on disk. "No restart pending" checks more than the enable call's own `RestartNeeded` flag. It also checks the general Windows pending-reboot indicators (`CBS\RebootPending`, `WindowsUpdate\RebootRequired`), because other pending servicing work can block this just as easily as Sysmon's own enable call. `PendingFileRenameOperations` is logged but treated as advisory only. Browser and AV updaters leave entries there constantly: in testing, Chrome's updater entries reappeared within minutes of a reboot, so a gate that blocked on them kept returning 3010.
+3. **Gate.** Nothing gets removed until three conditions hold: the feature reports exactly `Enabled`, no restart is pending, and `System32\sysmon.exe` actually exists on disk. The restart check covers more than Sysmon's own `RestartNeeded` flag; it also checks the general Windows pending-reboot indicators (`CBS\RebootPending`, `WindowsUpdate\RebootRequired`), since other pending servicing work can block this just as easily. `PendingFileRenameOperations` is logged but treated as advisory only, since browser and AV updaters leave entries there constantly. A gate that blocked on those kept returning 3010 in testing, as Chrome's updater entries reappeared within minutes of a reboot.
 
 4. **Only if the gate passes**, uninstall standalone Sysmon, then poll until both its service and the `SysmonDrv` driver key are confirmed gone.
 
@@ -43,7 +43,7 @@ If the gate doesn't pass, standalone is never touched. If a failure happens afte
 
 ### Classifying Sysmon installs by image path, not service name
 
-Native Sysmon's Windows service is named `Sysmon`, the same name 32-bit standalone Sysmon uses. Any detection or classification logic built around service names will misidentify native as standalone. This pattern classifies by the service's actual binary path instead: `%WINDIR%\System32\sysmon.exe` is native, and `Sysmon64.exe` or a 32-bit `Sysmon.exe` anywhere else is standalone. The same classification is used for the "already migrated" short-circuit, for the uninstall target, and for the SCCM detection method described below.
+Native Sysmon's Windows service is named `Sysmon`, the same name 32-bit standalone Sysmon uses. Any detection or classification logic built around service names will misidentify native as standalone. This pattern classifies by the service's actual binary path instead: `%WINDIR%\System32\sysmon.exe` is native, and `Sysmon64.exe` or a 32-bit `Sysmon.exe` anywhere else is standalone. The same classification is used for the "already migrated" short-circuit, for the uninstall target, and for the deployment detection method described below.
 
 One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk after `Sysmon64.exe -u force` removes the service. The uninstall removes the service and driver, not the binary file. Don't use the file's presence on disk as a signal that standalone is still installed; check the service instead.
 
@@ -53,12 +53,12 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 
 - Windows 11 Enterprise LTSC 24H2 (build 26100.9457), Hyper-V Gen 2 VM, and Windows 11 Pro 25H2 (build 26200.9457), physical. Native Sysmon 10.0.26100.8521 on both.
 - Source: standalone Sysmon64 **v14.16** only. Configs at schema 4.00 and 4.22 both loaded unchanged on native.
-- Run as a local administrator from an elevated Windows PowerShell 5.1 session. **Not yet run as SYSTEM under SCCM, and not tested on Windows Server 2025.**
+- Run as a local administrator from an elevated Windows PowerShell 5.1 session. **Not yet run as SYSTEM under a deployment tool, and not tested on Windows Server 2025.**
 
 ### Before you migrate
 
 - Search the config for `Sysmon64.exe`. Native's binary is `sysmon.exe`, so self-exclusion rules that match `Sysmon64.exe` won't exclude native's own activity. The script logs a warning if it finds a match but doesn't block.
-- Native Sysmon's rendered event messages are localized to the device language (per Microsoft Learn); the XML event data is not. SIEM parsers that read rendered message text rather than event data may need updating on non-English devices.
+- [Native Sysmon's rendered event messages are localized](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) to the device language; the XML event data is not. SIEM parsers that read rendered message text rather than event data may need updating on non-English devices.
 
 ### Exit codes
 
@@ -77,13 +77,13 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 | `4008` | An existing install doesn't match expectations (different config, feature not Enabled, binary missing) | No | Yes |
 | `4999` | Unhandled error; the log states whether removal had started | Check the log | Only in an earlier script version |
 
-### SCCM packaging
+### Packaging for deployment
 
 - **Requirement rule:** `Get-WindowsOptionalFeature -Online -FeatureName Sysmon` returns an object. This is the direct eligibility test rather than hardcoding a KB or build number, and it naturally excludes 23H2 and any 24H2 build that hasn't taken the required cumulative update.
-- **Detection method:** a service exists whose image is `%WINDIR%\System32\sysmon.exe`, no service with a `sysmon.exe` or `sysmon64.exe` image exists anywhere else, and `SysmonDrv\Parameters\Rules` is present. This is the same image-path classification as the migration script itself. It deliberately doesn't check `ConfigHash`, since tying detection to one config version would mean every future config change needs an application revision, which defeats the point of shipping config changes as a separate package. Consider also requiring the `Sysmon` service to be **Running**: a machine whose service has stopped would then show up in deployment status instead of counting as installed.
-- **Run as 64-bit PowerShell.** The script has no 64-bit check. In a 32-bit process, Windows redirects `System32` to `SysWOW64`, and the DISM cmdlets may fail as well. The script would then exit 4000 or 4003 without touching anything, which is safe but misleading. Keep the deployment type's "run as 32-bit process on 64-bit clients" option unchecked, and confirm it in the pilot.
-- **Config delivery for the package:** by default the script looks for `sysmonconfig-export.xml` next to itself, matching how SCCM stages package content into its content cache. Either name the production config file that way or pass `-ConfigFileName`. `-ConfigPath` exists for manual and pilot use with an absolute path.
-- `3010` maps to SCCM's standard soft-reboot exit code. Confirm the deployment re-runs the script automatically after the reboot rather than waiting for the next evaluation cycle.
+- **Detection method:** a service exists whose image is `%WINDIR%\System32\sysmon.exe`, no service with a `sysmon.exe` or `sysmon64.exe` image exists anywhere else, and `SysmonDrv\Parameters\Rules` is present. This is the same image-path classification as the migration script itself. It deliberately doesn't check `ConfigHash`, since tying detection to one config version would mean every future config change needs a package revision, which defeats the point of shipping config changes separately. Consider also requiring the `Sysmon` service to be **Running**: a machine whose service has stopped would then show up in deployment status instead of counting as installed.
+- **Run as 64-bit PowerShell.** The script has no 64-bit check. In a 32-bit process, Windows redirects `System32` to `SysWOW64`, and the DISM cmdlets may fail as well. The script would then exit 4000 or 4003 without touching anything, which is safe but misleading. Whatever tool packages this, make sure it's configured to run the script as a 64-bit process on 64-bit clients, and confirm it in the pilot.
+- **Config delivery for the package:** by default the script looks for `sysmonconfig-export.xml` next to itself, matching how most deployment tools stage package content locally on the endpoint before running a script. Either name the production config file that way or pass `-ConfigFileName`. `-ConfigPath` exists for manual and pilot use with an absolute path.
+- `3010` is the standard Windows soft-reboot exit code, recognized by most enterprise deployment tools. Confirm whatever runs this script re-runs it automatically after the reboot rather than waiting for its next evaluation cycle.
 
 ### Migration script
 
@@ -91,7 +91,7 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 
 | File | Purpose |
 |---|---|
-| `scripts/Migrate-SysmonToNative.ps1` | The gated migration script. Self-contained, no dependencies beyond Windows PowerShell 5.1. Intended to run as an SCCM Application script with the config file staged alongside it, or manually via `-ConfigPath` for pilot testing. |
+| `scripts/Migrate-SysmonToNative.ps1` | The gated migration script. Self-contained, no dependencies beyond Windows PowerShell 5.1. Intended to run as a deployment script with the config file staged alongside it, or manually via `-ConfigPath` for pilot testing. |
 
 A PowerShell 5.1 quirk worth knowing if you're modifying it: a single `[pscustomobject]` returned from a function reports `.Count` as `$null`, not `1`. With exactly one standalone service present, that would silently skip the uninstall loop and go straight to installing native on top of a still-installed standalone build. Every call site that might return one object wraps it in `@()` for this reason; keep that pattern if you extend the script. A second one: standalone `Sysmon64.exe -u` writes a blank line to stderr, which Windows PowerShell 5.1 turns into a terminating error under `2>&1` with `$ErrorActionPreference = 'Stop'`. That was the bug behind the accidental gap described above; the script now runs native commands through a wrapper that avoids it.
 
@@ -103,6 +103,7 @@ These are deliberate scope limits of the tested version, not bugs. Each one was 
 - **The config isn't validated against native before standalone is removed.** Only XML well-formedness is checked. A config native rejects (for example, a schema version above what native supports) is discovered only after standalone is gone.
 - **The `Sysmon` service being Running is not a pass condition,** either after install or in the "already migrated" check. Verification checks the driver, `Rules` and `ConfigHash`, which all still pass in the incompatible-blob outage described below.
 - **No automatic restore of standalone** on a gap state.
+- **The "already migrated" check doesn't confirm a native service exists.** It requires no standalone service, a `SysmonDrv` key and a matching `ConfigHash`. A `SysmonDrv` key left behind by standalone, such as when re-running after a 4007 without rebooting, or an orphaned key, can still hold standalone's `ConfigHash` for the same XML. The script would then report exit 0, "already migrated", with nothing running. The deployment detection method described earlier catches this, because it requires a service running from `System32\sysmon.exe`, but the script's own exit code would be wrong. Not observed in testing; identified by reviewing the code.
 
 ## Operational Guidance
 
@@ -134,6 +135,16 @@ C:\Windows\Sysmon64.exe -accepteula -i <known-good config.xml>
 
 Alternatively, fix the config and re-run the migration script. With no standalone service and no `SysmonDrv` key left, it takes the fresh-install path. That path hasn't been exercised in testing.
 
+### Recovering from the other gap states (4004, 4007, 4999)
+
+Only 4005 was produced deliberately. With the tested script, 4004, 4007 and 4999 were never hit. The one related case seen in testing came from an earlier version of the script, and it is the only recovery here that has actually been exercised. The rest is inferred from what the script does at each exit.
+
+- **Seen in testing (earlier script version, reported as 4999):** a stderr-handling bug crashed the standalone uninstall part-way through. That left `Sysmon64` stopped but still registered, the `SysmonDrv` key present, the driver not loaded, and no events, which is effectively a 4004 state. **What worked:** a reboot (`Sysmon64` is set to start automatically and came back on its own), then re-running the fixed script, which migrated cleanly with exit 0.
+- **4004** (standalone service still registered after the uninstall and timeout): check the log line `Standalone uninstall exit code:` for the cause, and check `sc.exe query Sysmon64` and `sc.exe query SysmonDrv`. Reboot, which is the recovery proven above, then re-run the script. It will find standalone again and retry.
+- **4007** (standalone service gone, `SysmonDrv` key still present): the driver is most likely marked for deletion until a reboot, so reinstalling standalone before rebooting would probably fail. Reboot, confirm `Test-Path HKLM:\SYSTEM\CurrentControlSet\Services\SysmonDrv` returns `False`, then re-run the script. It takes the fresh-install path, which has not been exercised in testing. If the key is still there after the reboot, investigate before re-running (see [Known limitations](#known-limitations-of-the-script)).
+- **4999** (unhandled error): the log's final lines say which case applies. If it reports that standalone was not touched, fix the cause shown in the error and re-run. If it reports a gap state, check `sc.exe query Sysmon64`, `sc.exe query Sysmon`, `sc.exe query SysmonDrv` and the `SysmonDrv` key, and follow whichever path above matches.
+- **Fallback whenever the `SysmonDrv` key is gone:** `C:\Windows\Sysmon64.exe -accepteula -i <config.xml>` restores standalone. The binary stays on disk after uninstall, and standalone installs cleanly with the native feature Enabled (both verified). If the key is still present, reboot first.
+
 ### Rollback
 
 Rolling back from native to standalone is a tested manual procedure; the script has no rollback mode.
@@ -151,7 +162,7 @@ The compiled `Rules` registry value carries a binary format version: 17 for stan
 
 **Recovery (verified):** `sysmon.exe -c <config.xml>` recompiles and reloads the configuration even with the service stopped. `Start-Service Sysmon` then restores monitoring.
 
-This is not a live risk for a fleet that loads config only through `sysmon -i` at migration and `sysmon -c` afterwards, because both compile against the binary actually installed. It becomes a risk if a registry-based Rules push reaches native machines without matching the binary version, so don't reintroduce one without re-verifying compatibility. Native's binary is also updated by Windows Update. Microsoft states configuration is preserved across updates, but after the first cumulative update, confirm the `Sysmon` service is Running and events are flowing, not just that the driver is loaded.
+This is not a live risk for a fleet that loads config only through `sysmon -i` at migration and `sysmon -c` afterwards, because both compile against the binary actually installed. It becomes a risk if a registry-based Rules push reaches native machines without matching the binary version, so don't reintroduce one without re-verifying compatibility. Native's binary is also updated by Windows Update, and [Microsoft states configuration is preserved](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) across updates. Even so, after the first cumulative update, confirm the `Sysmon` service is Running and events are flowing, not just that the driver is loaded.
 
 ### Detection and monitoring after migration
 
@@ -178,7 +189,7 @@ On a migrated machine, the channel holds both versions: standalone's Event ID 4 
 
 ### Rolling this out
 
-Pilot through SCCM on a small number of machines before a broader push. Everything above was validated running as a local administrator. Running as SYSTEM under SCCM has not been exercised yet, and it's the first thing to confirm in the pilot: that the script runs as a 64-bit process, that the config is found in the SCCM content cache, that 3010 is handled as a soft reboot followed by an automatic re-run, and that the event collector keeps receiving new Sysmon events from each migrated machine. Confirm exit codes are surfacing correctly in SCCM deployment status before scaling past that pilot.
+Pilot through your deployment tool on a small number of machines before a broader push. Everything above was validated running as a local administrator. Running as SYSTEM through a deployment tool has not been exercised yet, and it's the first thing to confirm in the pilot: that the script runs as a 64-bit process, that the config is found wherever your tool stages package content on the endpoint, that 3010 is handled as a soft reboot followed by an automatic re-run, and that the event collector keeps receiving new Sysmon events from each migrated machine. Confirm exit codes are surfacing correctly in your deployment tool's status reporting before scaling past that pilot.
 
 ## Related Patterns
 
