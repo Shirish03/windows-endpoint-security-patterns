@@ -39,6 +39,8 @@ The design responds to that directly: nothing destructive happens until every pr
 
 5. Install native Sysmon with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
 
+![The gated migration sequence, with every exit code the script can produce at each step](docs/pattern-06-migration-flow-diagram.png)
+
 If the gate doesn't pass, standalone is never touched. If a failure happens after standalone removal has already started, it's labeled a gap state in the log every time, not just when it happens to be the failure someone is watching for.
 
 ### Classifying Sysmon installs by image path, not service name
@@ -60,7 +62,22 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 - Search the config for `Sysmon64.exe`. Native's binary is `sysmon.exe`, so self-exclusion rules that match `Sysmon64.exe` won't exclude native's own activity. The script logs a warning if it finds a match but doesn't block.
 - [Native Sysmon's rendered event messages are localized](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) to the device language; the XML event data is not. SIEM parsers that read rendered message text rather than event data may need updating on non-English devices.
 
+### Migration script
+
+`Migrate-SysmonToNative.ps1` is the gated script described above: [`scripts/Migrate-SysmonToNative.ps1`](scripts/Migrate-SysmonToNative.ps1). This is the exact script used throughout testing. It was diffed against the tested copy and the only difference is a spelling fix inside a code comment, which doesn't change behavior.
+
+| File | Purpose |
+|---|---|
+| `scripts/Migrate-SysmonToNative.ps1` | The gated migration script. Self-contained, no dependencies beyond Windows PowerShell 5.1. Intended to run as a deployment script with the config file staged alongside it, or manually via `-ConfigPath` for pilot testing. |
+
+A couple of PowerShell 5.1 quirks are worth knowing if you modify this script:
+
+- A single `[pscustomobject]` returned from a function reports `.Count` as `$null`, not `1`. With exactly one standalone service present, that would silently skip the uninstall loop and install native on top of a still-installed standalone build. Every call site that might return one object wraps it in `@()` to avoid this; keep that pattern if you extend the script.
+- Standalone `Sysmon64.exe -u` writes a blank line to stderr, which Windows PowerShell 5.1 turns into a terminating error under `2>&1` with `$ErrorActionPreference = 'Stop'`. This was the bug behind the accidental gap described in [Architecture & Design](#architecture--design); the script now runs native commands through a wrapper that avoids it.
+
 ### Exit codes
+
+These are `Migrate-SysmonToNative.ps1`'s own exit codes, the script described above, not `sysmon.exe -i`'s exit code or anything the Sysmon optional feature returns on its own. The diagram in [Architecture & Design](#architecture--design) shows where each one branches off the gated sequence.
 
 | Code | Meaning | Standalone touched? | Observed in testing |
 |---|---|---|---|
@@ -70,7 +87,7 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 | `4001` | Config file missing or not valid XML | No | No |
 | `4002` | Feature didn't reach Enabled and no restart is pending | No | No |
 | `4003` | Feature reports Enabled but `sysmon.exe` is missing | No | No |
-| `4004` | **Gap.** Standalone service still present after uninstall | Uninstall ran, native install skipped | No |
+| `4004` | **Gap.** Standalone service still present after uninstall | Uninstall ran, native install skipped | No (an earlier script version produced this exact state, but exited 4999; see [Recovering from the other gap states](#recovering-from-the-other-gap-states-4004-4007-4999)) |
 | `4005` | **Gap.** Native install ran but failed verification | Already removed (if it was present) | Yes (deliberately) |
 | `4006` | Standalone service found, binary missing from disk, can't uninstall cleanly | No | No |
 | `4007` | **Gap.** Standalone gone but `SysmonDrv` key still present (likely pending reboot) | Already removed | No |
@@ -85,16 +102,6 @@ One more wrinkle worth knowing about: `C:\Windows\Sysmon64.exe` stays on disk af
 - **Config delivery for the package:** by default the script looks for `sysmonconfig-export.xml` next to itself, matching how most deployment tools stage package content locally on the endpoint before running a script. Either name the production config file that way or pass `-ConfigFileName`. `-ConfigPath` exists for manual and pilot use with an absolute path.
 - `3010` is the standard Windows soft-reboot exit code, recognized by most enterprise deployment tools. Confirm whatever runs this script re-runs it automatically after the reboot rather than waiting for its next evaluation cycle.
 
-### Migration script
-
-`Migrate-SysmonToNative.ps1` is the gated script described above: [`scripts/Migrate-SysmonToNative.ps1`](scripts/Migrate-SysmonToNative.ps1). It is functionally identical to the tested version; only a code comment's spelling differs.
-
-| File | Purpose |
-|---|---|
-| `scripts/Migrate-SysmonToNative.ps1` | The gated migration script. Self-contained, no dependencies beyond Windows PowerShell 5.1. Intended to run as a deployment script with the config file staged alongside it, or manually via `-ConfigPath` for pilot testing. |
-
-A PowerShell 5.1 quirk worth knowing if you're modifying it: a single `[pscustomobject]` returned from a function reports `.Count` as `$null`, not `1`. With exactly one standalone service present, that would silently skip the uninstall loop and go straight to installing native on top of a still-installed standalone build. Every call site that might return one object wraps it in `@()` for this reason; keep that pattern if you extend the script. A second one: standalone `Sysmon64.exe -u` writes a blank line to stderr, which Windows PowerShell 5.1 turns into a terminating error under `2>&1` with `$ErrorActionPreference = 'Stop'`. That was the bug behind the accidental gap described above; the script now runs native commands through a wrapper that avoids it.
-
 ### Known limitations of the script
 
 These are deliberate scope limits of the tested version, not bugs. Each one was observed or reasoned from testing.
@@ -106,6 +113,8 @@ These are deliberate scope limits of the tested version, not bugs. Each one was 
 - **The "already migrated" check doesn't confirm a native service exists.** It requires no standalone service, a `SysmonDrv` key and a matching `ConfigHash`. A `SysmonDrv` key left behind by standalone, such as when re-running after a 4007 without rebooting, or an orphaned key, can still hold standalone's `ConfigHash` for the same XML. The script would then report exit 0, "already migrated", with nothing running. The deployment detection method described earlier catches this, because it requires a service running from `System32\sysmon.exe`, but the script's own exit code would be wrong. Not observed in testing; identified by reviewing the code.
 
 ## Operational Guidance
+
+Everything below assumes the gated script from Implementation Reference is what's running. It covers what a clean migration actually looks like, how to recognize and recover from each failure mode the gate is designed to catch, one risk that has nothing to do with this script but can still take a migrated fleet down, and what to watch for once machines start moving over.
 
 ### What a clean migration looks like
 
@@ -164,14 +173,6 @@ The compiled `Rules` registry value carries a binary format version: 17 for stan
 
 This is not a live risk for a fleet that loads config only through `sysmon -i` at migration and `sysmon -c` afterwards, because both compile against the binary actually installed. It becomes a risk if a registry-based Rules push reaches native machines without matching the binary version, so don't reintroduce one without re-verifying compatibility. Native's binary is also updated by Windows Update, and [Microsoft states configuration is preserved](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) across updates. Even so, after the first cumulative update, confirm the `Sysmon` service is Running and events are flowing, not just that the driver is loaded.
 
-### Detection and monitoring after migration
-
-- Confirm the **`Sysmon` service is Running** and events are actually arriving, not just that `SysmonDrv` looks healthy. `sc query SysmonDrv` or `fltmc` can both report a healthy driver while the user-mode service has stopped logging anything.
-- Alert on Sysmon Event ID 255 containing "incompatible" or "Exit process", and on hosts that go quiet for longer than expected. A host in a gap state may have no Sysmon channel at all.
-- Update inventory and compliance tooling for the new service name (`Sysmon`, not `Sysmon64`), the new version numbering (`10.0.26100.x`, Windows-style, not Sysinternals-style), and the different driver path (`system32\drivers\sysmondrv.sys`).
-- Track the rollout from data you already forward: Sysmon Event ID 4 (`State: Started`) records the version at every start. A host whose latest start shows `10.0.x` is migrated, and the event time is when. A host still on `14.16` hasn't migrated. A `14.16` `Stopped` event with no `10.0.x` start after it points to a gap state.
-- After the fleet's first cumulative update following migration, spot-check a sample of machines: confirm the `Sysmon` service is Running, `sysmon -c` lists the expected rules, and there are no Event ID 255 entries.
-
 ### Checking the native Sysmon version
 
 Native Sysmon uses Windows version numbering (for example `10.0.26100.8521`), not Sysinternals numbering (`14.16`, `15.22`), and the two aren't comparable. Neither `sysmon.exe -?` nor `dism /online /get-featureinfo /featurename:Sysmon` shows a version. Two methods that do:
@@ -186,6 +187,14 @@ Get-WinEvent -FilterHashtable @{ LogName='Microsoft-Windows-Sysmon/Operational';
 ```
 
 On a migrated machine, the channel holds both versions: standalone's Event ID 4 (`Version: 14.16`, `SchemaVersion: 4.83`) from before the migration, followed by native's (`Version: 10.0.26100.8521`, `SchemaVersion: 4.91`). The schema version is the highest config schema that binary accepts; `sysmon.exe -i` or `-c` also prints it as `Sysmon schema version`.
+
+### Detection and monitoring after migration
+
+- Confirm the **`Sysmon` service is Running** and events are actually arriving, not just that `SysmonDrv` looks healthy. `sc query SysmonDrv` or `fltmc` can both report a healthy driver while the user-mode service has stopped logging anything.
+- Alert on Sysmon Event ID 255 containing "incompatible" or "Exit process", and on hosts that go quiet for longer than expected. A host in a gap state may have no Sysmon channel at all.
+- Update inventory and compliance tooling for the new service name (`Sysmon`, not `Sysmon64`), the new version numbering (`10.0.26100.x`, Windows-style, not Sysinternals-style), and the different driver path (`system32\drivers\sysmondrv.sys`).
+- Track the rollout from data you already forward: Sysmon Event ID 4 (`State: Started`) records the version at every start. A host whose latest start shows `10.0.x` is migrated, and the event time is when. A host still on `14.16` hasn't migrated. A `14.16` `Stopped` event with no `10.0.x` start after it points to a gap state.
+- After the fleet's first cumulative update following migration, spot-check a sample of machines: confirm the `Sysmon` service is Running, `sysmon -c` lists the expected rules, and there are no Event ID 255 entries.
 
 ### Rolling this out
 
