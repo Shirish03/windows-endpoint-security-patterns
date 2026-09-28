@@ -184,26 +184,33 @@ Here is what that means in practice.
 
 - The `ConfigFile` registry value records the full path native Sysmon
   was installed from. If that install ran from a temporary staging
-  location, an SCCM cache folder or a mapped deployment share, the
-  value ends up pointing at a path that no longer exists once the
+  location, a deployment tool's content cache or a mapped deployment
+  share, the value ends up pointing at a path that no longer exists once the
   install finishes. This is harmless functionally, since `Rules` is
   what Sysmon actually reads at runtime, but it can mislead an audit
   that expects `ConfigFile` to resolve to something real.
 
 - Migrating a single endpoint from standalone to native means an
   unavoidable window with no Sysmon monitoring at all, since the two
-  can't coexist. Measured directly across one uninstall-then-reinstall
-  cycle, that window was about six seconds. A fleet migration needs its
-  own tested, gated procedure, not just `sysmon -u` followed by
-  `sysmon -i`; that is a separate piece of work from this pattern's
-  configuration-delivery scope.
+  can't coexist. Measured directly across repeated uninstall-then-reinstall
+  cycles, that window is consistently 5 to 6 seconds. A fleet migration
+  needs its own tested, gated procedure, not just `sysmon -u` followed by
+  `sysmon -i`; that procedure, including rollback and failure handling, is
+  documented in
+  [Migrating Standalone Sysmon to Native Windows Sysmon](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-migration-standalone-to-native).
 
-- One thing not yet confirmed: whether a `Rules` registry blob compiled
-  by one flavor is valid when read by the other, given the two use
-  different, non-comparable version numbers. Until that's verified,
-  treat a reference system's compiled artifact as flavor-specific
-  rather than assuming it's interchangeable across a mixed standalone
-  and native fleet.
+- A `Rules` registry blob compiled by one Sysmon flavor is **not** valid
+  when read by the other, confirmed directly by testing rather than
+  inferred from the version numbering. Cross-loading is rejected
+  (Event ID 255, "incompatible"), and if the rejected blob is still in
+  place at the next reboot, the affected Sysmon service fails to start
+  at all, a full monitoring outage rather than a stale configuration.
+  This isn't a concern for this pattern's own registry-based delivery as
+  long as the reference system matches the target fleet's flavor, which
+  the requirement below already calls for. It matters if this pattern's
+  approach is ever pointed at a native-migrated fleet without accounting
+  for the binary change; see the migration pattern linked above for the
+  full finding and the recovery steps.
 
 - On builds earlier than 24H2, including 23H2, the optional feature
   doesn't exist at all, and `Get-WindowsOptionalFeature` returns an
@@ -284,7 +291,7 @@ for how to monitor and mitigate it in practice.
 
 | Requirement | Detail |
 |---|---|
-| **Sysmon** | Installed and running on reference system; version consistent with target endpoints. If the fleet mixes standalone and native Sysmon, use a reference system of the same flavor as the target: the two use non-comparable version-numbering schemes, and `Rules` blob compatibility across flavors is not yet confirmed (see [A Note on Native Sysmon](#a-note-on-native-sysmon-as-of-september-2026)) |
+| **Sysmon** | Installed and running on reference system; version consistent with target endpoints. If the fleet mixes standalone and native Sysmon, use a reference system of the same flavor as the target: the two use non-comparable version-numbering schemes, and `Rules` blobs compiled by one flavor are confirmed incompatible with the other (see [A Note on Native Sysmon](#a-note-on-native-sysmon-as-of-september-2026)) |
 | **Reference system** | Domain-joined Windows 10/11 or Server; used for config validation and registry extraction |
 | **Policy infrastructure** | Group Policy (domain-joined) or Intune Policy CSP (Intune-managed) |
 | **PowerShell** | Windows PowerShell 5.1 for extraction script |
@@ -494,6 +501,8 @@ queryable artifacts and policy reporting mechanisms.
 ## Related Patterns
 
 - **[Windows Event Forwarding: Categorized Collection](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/windows-event-forwarding-categorized-collection)**: decouples telemetry collection into category-based subscriptions and dedicated channels downstream of the endpoint. Sysmon is typically one of the categories that pattern collects, and both patterns share the same decoupling philosophy applied at different points in the pipeline: configuration lifecycle here, telemetry lifecycle there.
+
+- **[Migrating Standalone Sysmon to Native Windows Sysmon](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-migration-standalone-to-native)**: the gated procedure for cutting a fleet over from the standalone Sysmon this pattern was written for to the native Windows optional feature, including why that pattern's own configuration delivery deliberately doesn't reuse this pattern's registry-based approach.
 
 ---
 
