@@ -12,13 +12,13 @@
 ## Strategic Overview
 
 Windows 11 24H2 and Windows Server 2025, with the March 2026 cumulative update (KB5079473) or later, ship Sysmon as a built-in optional feature. This pattern documents the cutover from standalone Sysinternals Sysmon to that native feature: the gated sequence that makes the switch safe on a running fleet, what actually happens to monitoring coverage during the switch, and how to recover when it doesn't go cleanly.
- 
+
 Two names get used throughout: **standalone Sysmon** is the Sysinternals build, downloaded separately and installed as `Sysmon64.exe` or `Sysmon.exe`. **Native Sysmon** is the version delivered through the Windows Sysmon optional feature, installed as `System32\sysmon.exe`. Both are the same underlying tool; what differs is how each one gets onto the machine and stays current, which is what the rest of this document is about.
- 
+
 Standalone Sysmon isn't being deprecated, and the Sysinternals build is still actively maintained. If anything, its version number runs ahead of what most fleets are actually running, since keeping standalone current means someone has to notice each release and push the binary out. Native Sysmon updates through the normal Windows Update cycle instead: security fixes land in the monthly release, feature work goes out through preview updates first, and [Microsoft states](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview) configuration survives a binary update without needing to be reapplied. There's also no official customer support path for running Sysmon in production as a third-party download, however well established the tool is; native Sysmon has one, and that's really what makes the migration worth doing now rather than later.
- 
+
 The two builds cannot run side by side. [Microsoft doesn't support coexistence](https://learn.microsoft.com/en-us/windows/security/operating-system-security/sysmon/overview), and both register their kernel driver under the same name (`SysmonDrv`). So this is a real cutover (uninstall one, install the other), not a phased rollout where both run in parallel for a while. That constraint is what shapes everything else in this pattern: the migration has to be gated tightly enough that a machine never ends up in a state where neither build is running and nobody knows it.
- 
+
 This pattern also breaks from [Registry-Based Sysmon Configuration Deployment](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-configuration-via-native-policy), the pattern that got this fleet's standalone Sysmon configuration under policy control in the first place. That pattern pushes the compiled `Rules` registry value through Group Policy so configuration changes roll out without repackaging anything. For native Sysmon, this fleet is not carrying that approach forward. Configuration is supplied once, at migration time, via `sysmon.exe -i <config>`. Later configuration changes go out as a separate `sysmon.exe -c <config>` package rather than through the registry. The decision was driven by the Group Policy refresh delay that pattern already documents as a tradeoff. Testing then surfaced a second reason: the compiled rules blob is not compatible between Sysmon binary versions. In testing between standalone 14.16 and native, a blob compiled by one was rejected by the other, and if a rejected blob is the one in place at boot, the native Sysmon service logs two Event ID 255 errors and exits within about five seconds. That finding is detailed in [Operational Guidance](#operational-guidance), because anyone tempted to point their existing registry-based delivery pipeline at a native-migrated fleet needs to see it before they do.
 
 ## Architecture & Design
@@ -39,7 +39,7 @@ The design responds to that directly: nothing destructive happens until every pr
 
 4. **Only if the gate passes**, uninstall standalone Sysmon, then poll until both its service and the `SysmonDrv` driver key are confirmed gone.
 
-5. **Install native Sysmon** with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
+5. Install native Sysmon with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
 
 ![The gated migration sequence, with every exit code the script can produce at each step](docs/pattern-06-migration-flow-diagram.png)
 
