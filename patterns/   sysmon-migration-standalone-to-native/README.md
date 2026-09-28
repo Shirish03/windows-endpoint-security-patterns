@@ -37,7 +37,7 @@ The design responds to that directly: nothing destructive happens until every pr
 
 4. **Only if the gate passes**, uninstall standalone Sysmon, then poll until both its service and the `SysmonDrv` driver key are confirmed gone.
 
-5. Install native Sysmon with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
+5. **Install native Sysmon** with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
 
 ![The gated migration sequence, with every exit code the script can produce at each step](docs/pattern-06-migration-flow-diagram.png)
 
