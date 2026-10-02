@@ -7,7 +7,8 @@
 
 A practitioner's reference for Windows endpoint security patterns across
 on-premises Group Policy, Hybrid Entra ID, and cloud-native Intune
-environments, each one built to close a real gap in the standard tooling.
+environments, each one built to close a real gap in the standard tooling,
+or to establish a governed security baseline where no tooling exists yet.
 
 By Shirish Mistry · Associate Principal, Endpoint Security & Architecture · [LinkedIn](https://www.linkedin.com/in/shirish1)
 
@@ -41,7 +42,7 @@ and where the answer to a security gap is not always "wait for a platform update
 |---|---------|----------------|-------------|
 | 01 | [BitLocker-to-Go Key Escrow](patterns/hybrid-entra-btg-key-escrow-pattern) | Entra ID half of dual-destination escrow fails silently on Hybrid Entra ID joined devices | Hybrid Entra ID + Intune |
 | 02 | [Sysmon Registry Deployment](patterns/sysmon-configuration-via-native-policy) | Avoid repeated binary redeployment for config-only updates | GPO / Policy-managed |
-| 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | Provision securely without Autopilot or imaging infrastructure | Offline / No infrastructure |
+| 03 | [Serverless Windows Provisioning](patterns/serverless-windows-provisioning-wicd) | No governed provisioning path exists without Autopilot or imaging infrastructure, so baseline security configuration is left inconsistent | Offline / No infrastructure |
 | 04 | [SCEP Certificate Enrollment via Internal NDES](patterns/scep-certificate-enrollment-internal-ndes) | SCEP certificate enrollment for cloud-native Windows & macOS devices, without exposing internal PKI and without relying on `{{OnPremisesSecurityIdentifier}}`, which does not resolve once KB5014754 strong-mapping enforcement is in effect and the device has no on-premises AD computer object | Entra ID Join Only (Windows & macOS) + Intune + Internal PKI + ZTNA/VPN |
 | 05 | [Windows Event Forwarding: Categorized Collection](patterns/windows-event-forwarding-categorized-collection) | Mixed-category security, Sysmon, Defender, and firewall events crowd a single forwarded-events channel, complicating SIEM ingestion and scaling | GPO / Policy-managed |
 | 06 | [Migrating Standalone Sysmon to Native Windows Sysmon](patterns/sysmon-migration-standalone-to-native) | Gated cutover from Sysinternals Sysmon to the Windows 11 native optional feature, with no monitoring gap that goes unnoticed | Windows 11 24H2+ / Server 2025, packaged for endpoint deployment |
@@ -91,6 +92,10 @@ Pattern 06 (Migrating Standalone Sysmon to Native Windows Sysmon) is a separate 
 requires Windows 11 24H2+ or Windows Server 2025 with the March 2026 cumulative update, and was
 validated and packaged for delivery through a general-purpose software deployment tool rather than
 Group Policy or Intune directly. See that pattern's README for full scope details.
+
+Pattern 03 (Serverless Windows Provisioning with WICD) is a third exception: it targets
+offline, no-infrastructure provisioning scenarios where Hybrid Entra ID join and Intune
+enrollment haven't happened yet, by design. See that pattern's README for full scope details.
 
 Patterns may apply in broader configurations but have not been validated
 outside this context.
