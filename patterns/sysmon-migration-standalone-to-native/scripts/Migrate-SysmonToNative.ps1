@@ -34,13 +34,13 @@
 
 .PARAMETER ConfigPath
     Full path to the Sysmon XML config file. Use this for manual/pilot
-    testing, e.g. -ConfigPath C:\SysmonMigration\sysmonconfig-export.xml
+    testing, e.g. -ConfigPath C:\SysmonMigration\config.xml
     If omitted, the script looks for -ConfigFileName in the same folder
     as the script itself (the SCCM package layout).
 
 .PARAMETER ConfigFileName
     Config file name used only when -ConfigPath is not supplied.
-    Defaults to "sysmonconfig-export.xml".
+    Defaults to "config.xml".
 
 .PARAMETER LogPath
     Log file location. Defaults to
@@ -58,7 +58,7 @@
     verification before giving up. Defaults to 30.
 
 .EXAMPLE
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Migrate-SysmonToNative.ps1 -ConfigPath C:\SysmonMigration\sysmonconfig-export.xml
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Migrate-SysmonToNative.ps1 -ConfigPath C:\SysmonMigration\config.xml
     $LASTEXITCODE
 
 .NOTES
@@ -98,7 +98,7 @@
 [CmdletBinding()]
 param(
     [string]$ConfigPath,
-    [string]$ConfigFileName = 'sysmonconfig-export.xml',
+    [string]$ConfigFileName = 'config.xml',
     [string]$LogPath = "$env:ProgramData\SysmonMigration\migration.log",
     [ValidateRange(5, 300)][int]$TimeoutSeconds = 30,
     [switch]$BlockOnPendingFileRenames

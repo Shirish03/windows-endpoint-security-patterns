@@ -101,7 +101,7 @@ These are `Migrate-SysmonToNative.ps1`'s own exit codes, the script described ab
 - **Requirement rule:** `Get-WindowsOptionalFeature -Online -FeatureName Sysmon` returns an object. This is the direct eligibility test rather than hardcoding a KB or build number, and it naturally excludes 23H2 and any 24H2 build that hasn't taken the required cumulative update.
 - **Detection method:** a service exists whose image is `%WINDIR%\System32\sysmon.exe`, no service with a `sysmon.exe` or `sysmon64.exe` image exists anywhere else, and `SysmonDrv\Parameters\Rules` is present. This is the same image-path classification as the migration script itself. It deliberately doesn't check `ConfigHash`, since tying detection to one config version would mean every future config change needs a package revision, which defeats the point of shipping config changes separately. Consider also requiring the `Sysmon` service to be **Running**: a machine whose service has stopped would then show up in deployment status instead of counting as installed.
 - **Run as 64-bit PowerShell.** The script has no 64-bit check. In a 32-bit process, Windows redirects `System32` to `SysWOW64`, and the DISM cmdlets may fail as well. The script would then exit 4000 or 4003 without touching anything, which is safe but misleading. Whatever tool packages this, make sure it's configured to run the script as a 64-bit process on 64-bit clients, and confirm it in the pilot.
-- **Config delivery for the package:** by default the script looks for `sysmonconfig-export.xml` next to itself, matching how most deployment tools stage package content locally on the endpoint before running a script. Either name the production config file that way or pass `-ConfigFileName`. `-ConfigPath` exists for manual and pilot use with an absolute path.
+- **Config delivery for the package:** by default the script looks for `config.xml` next to itself, matching how most deployment tools stage package content locally on the endpoint before running a script. Either name the production config file that way or pass `-ConfigFileName`. `-ConfigPath` exists for manual and pilot use with an absolute path.
 - `3010` is the standard Windows soft-reboot exit code, recognized by most enterprise deployment tools. Confirm whatever runs this script re-runs it automatically after the reboot rather than waiting for its next evaluation cycle.
 
 ### Known limitations of the script
@@ -162,7 +162,7 @@ Rolling back from native to standalone is a tested manual procedure; the script 
 
 ```powershell
 C:\Windows\System32\sysmon.exe -u
-Sysmon64.exe -accepteula -i .\sysmonconfig-export.xml
+Sysmon64.exe -accepteula -i .\config.xml
 ```
 
 Native's uninstall takes about 4 seconds and leaves the optional feature itself still `Enabled`. There's no need to disable it or reboot before reinstalling standalone. Standalone reinstalls cleanly on top of that with the same config and the same resulting `ConfigHash`. The monitoring gap for a rollback measured about the same as the forward migration, around 5 seconds. Re-running the forward migration script afterward picks up cleanly too: it detects the feature is already Enabled, skips the enable step, and proceeds straight to the standalone removal and native install. Rollback was tested with standalone 14.16 only, run as a local administrator.
