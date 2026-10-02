@@ -200,20 +200,28 @@ On a migrated machine, the channel holds both versions: standalone's Event ID 4 
 
 ### Updating the configuration after migration
 
-Native Sysmon doesn't inherit this fleet's old configuration-delivery path. The predecessor pattern, [Registry-Based Sysmon Configuration Deployment](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-configuration-via-native-policy), pushed the compiled `Rules` value through Group Policy so config changes rolled out without repackaging anything. That approach isn't carried forward here — see [Strategic Overview](#strategic-overview) for why. Post-migration, a config change is a deliberate package, not a policy refresh: `sysmon.exe -c <config.xml>`, staged and deployed through the same tool and the same package layout as the initial install (see [Packaging for deployment](#packaging-for-deployment)).
+Config changes after migration go out as a package: run `sysmon.exe -c <config.xml>`, staged and deployed the same way as the initial install (see [Packaging for deployment](#packaging-for-deployment)). That's different from how this fleet updated configs under standalone Sysmon. The old pattern, [Registry-Based Sysmon Configuration Deployment](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/sysmon-configuration-via-native-policy), pushed the compiled `Rules` value through Group Policy, so a config change rolled out without repackaging anything. Native Sysmon doesn't use that approach. See [Strategic Overview](#strategic-overview) for why.
 
-**Test against the exact binary build before it goes fleet-wide.** This is the one step in the process that isn't optional, and it's worth understanding why. `sysmon.exe -c` doesn't just validate the XML you hand it — it compiles that XML into a binary `Rules` format, and that compiled format has its own version number, separate from the config schema version (17 for standalone 14.16, 18 for native). A Sysmon binary will reject a `Rules` blob compiled in a format it doesn't recognize, no matter how well-formed the source XML was. Matching format version numbers isn't even enough on its own: standalone 15.22 also compiles to format 18, the same number native uses, but its blob layout still differs from native's. The only thing that reliably proves a config will load is testing it against the actual binary that will load it in production — not just confirming the XML parses, and not assuming a config that worked on one Sysmon build will work on another.
+Test every new config against the exact Sysmon build installed on the target machines before pushing it to the fleet. This step isn't optional, and it's worth explaining why.
 
-This matters because the failure mode is silent, not loud. When a binary rejects a `Rules` blob, it logs Event ID 255 ("incompatible") and keeps running on whatever configuration it already had loaded in memory — no crash, no alert, and `ConfigHash` doesn't change to reflect the rejected push. A check that only confirms the driver is running and `ConfigHash` is set — which is what this script's own verification does — sees nothing wrong. The actual outage doesn't surface until the next reboot, when the service has no in-memory fallback and has to load `Rules` fresh from the registry: it logs two Event ID 255 entries and exits within about five seconds, while the driver keeps showing as running. See [The gap state you don't want to cause yourself](#the-gap-state-you-dont-want-to-cause-yourself-incompatible-rules-blobs) for the full outage writeup and verified recovery. The gap between a bad config push and a visible outage can be days or weeks, which is exactly why this needs to be a hard rule rather than a judgment call at push time.
+`sysmon.exe -c` doesn't just check that your XML is well-formed. It compiles the XML into a binary `Rules` format, and that compiled format carries its own version number, separate from the config schema version. Standalone 14.16 compiles to format 17. Native compiles to format 18. A Sysmon binary rejects a `Rules` blob it doesn't recognize, no matter how valid the source XML was.
 
-One more wrinkle: "the currently installed native binary" isn't fixed. Native Sysmon updates through the normal Windows Update cycle, so a fleet mid-rollout of a cumulative update can have more than one native binary build live at once. Testing against "native" as a category isn't enough — test against the specific build the target machines are actually running.
+Matching the format version isn't even enough. Standalone 15.22 also compiles to format 18, same as native, but the two blobs aren't interchangeable. Their layout differs. The only real test is loading the config on the exact binary that will run it in production.
 
-**After pushing a config update, verify:**
-- `ConfigHash` in the registry matches the SHA-256 of the new config file, confirming the push actually took.
-- The `Sysmon` service is still **Running**, not just the `SysmonDrv` driver — the driver staying up is exactly what makes the incompatible-blob failure mode look healthy when it isn't.
-- Events are still reaching `Microsoft-Windows-Sysmon/Operational`, since a dead service and a quiet channel look identical to a collector until someone checks.
+The failure is also quiet. When a binary rejects a `Rules` blob, it logs Event ID 255 ("incompatible") and keeps running on whatever config was already loaded in memory. No crash, no alert. `ConfigHash` doesn't change either, so a check that only looks at the driver and `ConfigHash` — which is what this script's own verification does — finds nothing wrong.
 
-These are the same three checks called out for confirming monitoring survives a binary update after a cumulative update lands (see [The gap state you don't want to cause yourself](#the-gap-state-you-dont-want-to-cause-yourself-incompatible-rules-blobs)) — a config push deserves the same scrutiny a binary update does, for the same reason.
+The real outage shows up later, at the next reboot. With no in-memory config to fall back on, the service tries to load `Rules` fresh from the registry, logs two Event ID 255 entries, and exits within about five seconds. The driver keeps showing as running the whole time. See [The gap state you don't want to cause yourself](#the-gap-state-you-dont-want-to-cause-yourself-incompatible-rules-blobs) for the full writeup and the verified recovery steps.
+
+That gap between a bad push and a visible outage can run days or weeks. That's why this needs to be a hard rule, not a judgment call at push time.
+
+One more thing to watch for: "the currently installed native binary" isn't a fixed target. Native Sysmon updates through the normal Windows Update cycle, so a fleet partway through a cumulative update rollout can have more than one native build running at once. Test against the specific build your targets are on, not against "native" as a category.
+
+After pushing a config update, check three things:
+- `ConfigHash` in the registry matches the SHA-256 of the new config file
+- The `Sysmon` service is Running, not just the `SysmonDrv` driver
+- Events are still reaching `Microsoft-Windows-Sysmon/Operational`
+
+These are the same checks this README already recommends after a cumulative update replaces the binary. A config push deserves the same scrutiny.
 
 ### Rolling this out
 
