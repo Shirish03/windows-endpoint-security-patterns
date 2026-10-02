@@ -208,7 +208,7 @@ Test every new config against the exact Sysmon build installed on the target mac
 
 Matching the format version isn't even enough. Standalone 15.22 also compiles to format 18, same as native, but the two blobs aren't interchangeable. Their layout differs. The only real test is loading the config on the exact binary that will run it in production.
 
-The failure is also quiet. When a binary rejects a `Rules` blob, it logs Event ID 255 ("incompatible") and keeps running on whatever config was already loaded in memory. No crash, no alert. `ConfigHash` doesn't change either, so a check that only looks at the driver and `ConfigHash` — which is what this script's own verification does — finds nothing wrong.
+The failure is also quiet. When a binary rejects a `Rules` blob, it logs Event ID 255 ("incompatible") and keeps running on whatever config was already loaded in memory. No crash, no alert. `ConfigHash` doesn't change either, so a check that only looks at the driver and `ConfigHash`, which is what this script's own verification does, finds nothing wrong.
 
 The real outage shows up later, at the next reboot. With no in-memory config to fall back on, the service tries to load `Rules` fresh from the registry, logs two Event ID 255 entries, and exits within about five seconds. The driver keeps showing as running the whole time. See [The gap state you don't want to cause yourself](#the-gap-state-you-dont-want-to-cause-yourself-incompatible-rules-blobs) for the full writeup and the verified recovery steps.
 
