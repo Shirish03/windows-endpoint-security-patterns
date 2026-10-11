@@ -76,13 +76,14 @@ obligations independently.
 
 ### Architectural Recommendation
 
-Native Windows tooling, specifically the Windows Imaging and
-Configuration Designer (WICD) and provisioning packages, provides a
-viable, secure provisioning path without infrastructure dependency for
-environments where Autopilot or SCCM are not feasible. The approach
-applies encryption, security configuration, and identity join during
-OOBE using only platform-native mechanisms, with no deployment servers,
-imaging pipelines, or long-running agents.
+Native Windows tooling provides a viable, secure provisioning path without
+infrastructure dependency for environments where Autopilot or SCCM are not
+feasible. Windows Imaging and Configuration Designer (Windows ICD) builds a
+customized Windows image on bootable USB media. A provisioning package made in
+the same tool applies the join, enrollment, certificate, and Wi-Fi settings
+after the image is installed, and a custom script backs up the BitLocker
+recovery key. The approach uses only platform-native mechanisms, with no
+deployment servers, imaging servers, or long-running agents.
 
 ---
 
@@ -102,7 +103,7 @@ none of which may exist in these scenarios.
 
 This pattern demonstrates how to provision devices securely and
 consistently using only the platform's native capabilities, without
-deployment servers, imaging pipelines, or long-running agents.
+deployment servers, imaging servers, or long-running agents.
 
 ---
 
@@ -140,16 +141,23 @@ flowchart TB
 
 ### How It Works
 
-1. A provisioning package (`.ppkg`) defines system configuration,
-   security settings, and application installs
-2. Devices boot from prepared installation media (USB)
-3. Users complete Entra ID join during setup
-4. Security controls (BitLocker, VPN, Wi-Fi, compliance settings)
-   are applied automatically
-5. Device reaches a compliant and usable state without manual
-   intervention
+The flow has two stages: an image is built once, then provisioning runs on each
+device after the image is installed.
 
-> No deployment servers · No imaging pipelines · No long-running agents
+1. A customized Windows 10 image is built in Windows ICD (Windows image
+   customization). Image-time settings are baked into the image when it is built
+2. The image is written to a bootable USB drive (Create > Clean install media,
+   WIM format)
+3. The device boots from the USB drive and the image installs
+4. Provisioning then runs: the device joins Azure AD (now Microsoft Entra ID)
+   and enrolls in Intune, and the baseline applications install. A provisioning
+   package made in the same tool delivers the certificate and Wi-Fi profile
+5. A custom script triggers the BitLocker recovery key backup to Azure AD
+6. The device reaches a compliant and usable state without manual
+   intervention. In the lab, the whole sequence from boot to key backup took
+   about 11 minutes
+
+> No deployment servers · No imaging servers · No long-running agents
 
 ---
 
@@ -157,7 +165,7 @@ flowchart TB
 
 | Principle | Description |
 |---|---|
-| **Encryption at provisioning** | BitLocker is enabled during OOBE; recovery keys are backed up to Entra ID using native platform trust |
+| **Recovery key backup at provisioning** | A custom script backs up the BitLocker recovery key to Azure AD as part of provisioning, so the device is recoverable before it is issued |
 | **No embedded credentials** | No secrets or credentials are stored in provisioning package artifacts |
 | **Platform-native trust** | All security controls operate within Windows security boundaries |
 | **Provisioning as a security control** | Configuration is treated as a security artifact, not just a setup convenience |
@@ -186,6 +194,12 @@ provide ongoing management. For continuous compliance enforcement,
 Intune enrollment following initial provisioning is recommended where
 feasible.
 
+**Tooling availability**
+This pattern was built with the Windows ADK for Windows 10 version 1607. The
+image customization option used here may not exist in current ADK or Windows
+Configuration Designer releases, whose documentation describes provisioning
+packages. Confirm what your version offers before reusing the flow.
+
 ---
 
 ## Implementation Reference
@@ -194,45 +208,46 @@ feasible.
 
 | Requirement | Detail |
 |---|---|
-| **Windows ADK** | Windows Assessment and Deployment Kit with WICD component installed on the authoring machine |
+| **Windows ADK** | Windows ADK for Windows 10 version 1607 (10.1.14393.8069) with Windows Imaging and Configuration Designer installed on the authoring machine |
 | **Target OS** | Windows 10 version 1607, the build this pattern was tested on. Later builds, including Windows 11, have not been validated against this flow |
-| **USB media** | Prepared Windows installation USB; provisioning package applied at OOBE |
-| **Entra ID** | Required for Entra ID join during setup; device must be able to reach Entra ID at enrollment time if joining |
+| **USB media** | USB drive of 8 GB or more (NTFS). Building the media wipes and reformats it |
+| **Entra ID** | Required for the Azure AD join and Intune enrollment during provisioning; the device must be able to reach it at that point |
 | **Authoring machine** | Any Windows 10/11 machine with ADK installed; does not need to be domain-joined |
 
 ---
 
-### Building the Provisioning Package
+### Building the image and provisioning package
 
-**1. Install the Windows ADK with WICD**
+**1. Install the ADK with Windows ICD**
 
-Download the Windows ADK for the target OS version from Microsoft and
-install the WICD component. The ADK version should match or be newer
-than the target Windows build.
+Install the Windows ADK for Windows 10 version 1607 and its Windows Imaging
+and Configuration Designer component on the authoring machine.
 
-**2. Create a new provisioning package in WICD**
+**2. Create a Windows image customization project**
 
-Open WICD and create a new project targeting the appropriate Windows
-edition and architecture. Configure the relevant settings:
+In Windows ICD, choose Windows image customization. Set the image-time
+settings, which are baked into the image, and the runtime settings, which
+are applied after installation.
 
-- **Account management**: Entra ID join settings if applicable
-- **Security settings**: BitLocker, password policy, screen lock
-- **Certificates**: trusted root certificates if required
-- **Wi-Fi profiles**: pre-configured network profiles
-- **Applications**: silent install packages if needed
+**3. Create the provisioning package**
 
-**3. Export the provisioning package**
-
-Export the project as a `.ppkg` file. Sign the package if the
+In the same tool, make a provisioning package for the Azure AD join, Intune
+enrollment, certificate, and Wi-Fi settings. Sign the package if the
 environment requires signed provisioning packages (recommended for
 production use). Record the package version in the filename. See
 [Operational Guidance → Package Versioning](#package-versioning).
 
-**4. Place the package on installation media**
+**4. Add the BitLocker backup script**
 
-Copy the `.ppkg` file to the root of the Windows installation USB or
-to a secondary USB presented during OOBE. Windows will detect and offer
-to apply any `.ppkg` files found at these locations during setup.
+Include the custom script that triggers the BitLocker recovery key backup to
+Azure AD, so it runs as part of provisioning.
+
+**5. Build the bootable USB drive**
+
+Format a USB drive of 8 GB or more as NTFS and connect it to the authoring
+machine. In the image project, choose Create > Clean install media, select
+WIM as the image format, choose Create a bootable USB drive, select the
+removable drive, and finish the wizard. The drive is wiped and reformatted.
 
 ---
 
@@ -260,7 +275,7 @@ Should return `AzureAdJoined : YES`.
 Get-WinEvent -LogName "Microsoft-Windows-Provisioning-Diagnostics-Provider/Admin" |
     Select-Object TimeCreated, Message -First 20
 ```
-Review for any provisioning errors during OOBE.
+Review for any provisioning errors during the provisioning stage.
 
 ---
 
@@ -268,7 +283,7 @@ Review for any provisioning errors during OOBE.
 
 | File | Purpose |
 |---|---|
-| `docs/provisioning-flow.md` | Step-by-step walkthrough of the WICD provisioning flow from package creation through OOBE to first login; includes per-component runtime behavior notes and failure handling |
+| `docs/provisioning-flow.md` | Step-by-step walkthrough of the flow from image and package creation through provisioning to first login; includes per-component runtime behavior notes and failure handling |
 
 ---
 
@@ -295,21 +310,20 @@ for at least one provisioning cycle to support rollback.
 
 ---
 
-### Provisioning Failure During OOBE
+### Provisioning Failure After Image Install
 
-If the provisioning package fails to apply during OOBE, Windows will
-display an error or skip the package silently depending on the failure
-type. Common causes:
+If provisioning fails after the image installs, the device may boot to a
+working desktop without being joined, enrolled, or recoverable. Common causes:
 
 | Symptom | Likely cause | Resolution |
 |---|---|---|
-| Package not offered during setup | `.ppkg` not at root of USB or media; filename contains unsupported characters | Verify file placement and name |
-| Package offered but fails to apply | ADK version mismatch; package targets wrong OS edition or architecture | Re-author with matching ADK version |
-| Entra ID join fails during OOBE | No internet connectivity; tenant configuration issue | Complete setup without join; join manually post-setup via Settings |
-| BitLocker not enabled after setup | TPM not present or not ready; BitLocker policy not included in package | Check TPM status; verify package configuration |
+| Image does not boot from USB | USB not built as bootable media; boot order or firmware settings | Rebuild with Create > Clean install media and check boot settings |
+| Provisioning package settings not applied | ADK version mismatch; package targets wrong OS edition or architecture | Re-author with the matching ADK version |
+| Azure AD join or Intune enrollment fails | No network connectivity; tenant configuration issue | Join manually post-setup via Settings |
+| Certificate or Wi-Fi profile missing | Package settings incomplete or package not applied | Check the provisioning diagnostics log and re-apply the package |
+| BitLocker key not in Azure AD | Script did not run or device had no connectivity; TPM not ready | Check TPM status and connectivity, then re-run the backup script |
 
-To re-attempt provisioning after a failed OOBE run, provisioning
-packages can be applied post-setup:
+To re-apply a provisioning package after a failed run:
 
 ```powershell
 Install-ProvisioningPackage -PackagePath "D:\WICD-Provisioning-v1.3-20260601.ppkg" -QuietInstall
@@ -345,6 +359,8 @@ device leaves the provisioning environment:
 | Entra ID joined | `dsregcmd /status` | AzureAdJoined: YES |
 | Recovery key escrowed | Entra ID portal → Devices → BitLocker Keys | Key present for device |
 | Provisioning log clean | Event Viewer → Provisioning-Diagnostics-Provider | No errors |
+| Certificate installed | `Get-ChildItem Cert:\LocalMachine\My` | Expected certificate present |
+| Wi-Fi profile present | `netsh wlan show profiles` | Expected profile listed |
 | Network connectivity | `Test-NetConnection` to known endpoint | Success |
 
 Any failed check should be investigated and resolved before the device
@@ -357,18 +373,18 @@ a recoverable encryption state.
 
 | Dependency | Notes |
 |---|---|
-| Windows ADK with WICD | Required on the authoring machine only; not installed on provisioned devices; ADK version should match or exceed the target Windows build |
-| TPM | Required for BitLocker encryption during OOBE; devices without a functional TPM will not encrypt unless the provisioning package includes a policy exception |
-| Entra ID connectivity | Required at OOBE time if the package includes Entra ID join; devices provisioned offline must complete the join step manually post-setup via Settings |
-| Signed provisioning package | Recommended for production use; unsigned packages may trigger a UAC prompt during OOBE or be blocked by policy |
-| Windows installation USB | The provisioning package must be at the root of the installation USB or on a secondary USB presented during OOBE; placement elsewhere will prevent detection |
+| Windows ADK with Windows ICD | Required on the authoring machine only; not installed on provisioned devices; this flow used the ADK for Windows 10 version 1607 |
+| TPM | Required for BitLocker encryption and key backup; devices without a functional TPM will not encrypt |
+| Entra ID connectivity | Required during provisioning for the Azure AD join, Intune enrollment, and key backup; devices provisioned offline must complete those steps manually afterward |
+| Signed provisioning package | Recommended for production use; unsigned packages may trigger a prompt or be blocked by policy |
+| Bootable USB drive | Built from the image project with Create > Clean install media. It is wiped and reformatted when built, so keep source files off the drive |
 
 ---
 
 ## Related Patterns
 
-- **[BitLocker-to-Go Recovery Key Escrow](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/hybrid-entra-btg-key-escrow-pattern)**: this pattern enables BitLocker and triggers the initial recovery key escrow to Entra ID during OOBE provisioning. That pattern is the compensating control for the same escrow mechanism later in the device's life, when a user encrypts a removable drive with BitLocker-to-Go and that specific escrow path fails silently.
-- **[SCEP Certificate Enrollment via Internal NDES](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/scep-certificate-enrollment-internal-ndes)**: a device provisioned here completes Entra ID join during setup. When that join is Entra ID Join Only rather than Hybrid, a realistic outcome for offline or infrastructure-light provisioning, the resulting device is exactly the population that pattern's certificate enrollment was built for.
+- **[BitLocker-to-Go Recovery Key Escrow](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/hybrid-entra-btg-key-escrow-pattern)**: this pattern triggers the initial recovery key backup to Azure AD, through a custom script, during provisioning. That pattern is the compensating control for the same escrow mechanism later in the device's life, when a user encrypts a removable drive with BitLocker-to-Go and that specific escrow path fails silently.
+- **[SCEP Certificate Enrollment via Internal NDES](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/scep-certificate-enrollment-internal-ndes)**: a device provisioned here completes Entra ID join during provisioning. When that join is Entra ID Join Only rather than Hybrid, a realistic outcome for offline or infrastructure-light provisioning, the resulting device is exactly the population that pattern's certificate enrollment was built for.
 
 ---
 
