@@ -149,7 +149,9 @@ device after the image is installed.
 2. The image is written to a bootable USB drive (Create > Clean install media,
    WIM format)
 3. The device boots from the USB drive and the image installs
-4. Provisioning then runs: the device joins Azure AD (now Microsoft Entra ID)
+4. The provisioning package is kept on the same USB drive, so nothing is
+   delivered over the network. After the OS installs, the device detects the
+   package on the USB media and provisioning runs: the device joins Azure AD (now Microsoft Entra ID)
    and enrolls in Intune, and the baseline applications install. A provisioning
    package made in the same tool delivers the certificate and Wi-Fi profile
 5. A custom script triggers the BitLocker recovery key backup to Azure AD
@@ -249,6 +251,12 @@ machine. In the image project, choose Create > Clean install media, select
 WIM as the image format, choose Create a bootable USB drive, select the
 removable drive, and finish the wizard. The drive is wiped and reformatted.
 
+**6. Keep the provisioning package on the same USB drive**
+
+Place the signed `.ppkg` on the bootable USB drive. In the tested build, the
+device detected the package on the install media automatically after the OS
+installed, with no network delivery and no manual step to apply it.
+
 ---
 
 ### Validation
@@ -317,6 +325,7 @@ working desktop without being joined, enrolled, or recoverable. Common causes:
 
 | Symptom | Likely cause | Resolution |
 |---|---|---|
+| Package not detected after install | `.ppkg` missing from the USB drive, or the drive was removed before provisioning started | Confirm the package is on the media and leave the drive attached until provisioning finishes |
 | Image does not boot from USB | USB not built as bootable media; boot order or firmware settings | Rebuild with Create > Clean install media and check boot settings |
 | Provisioning package settings not applied | ADK version mismatch; package targets wrong OS edition or architecture | Re-author with the matching ADK version |
 | Azure AD join or Intune enrollment fails | No network connectivity; tenant configuration issue | Join manually post-setup via Settings |
@@ -377,7 +386,7 @@ a recoverable encryption state.
 | TPM | Required for BitLocker encryption and key backup; devices without a functional TPM will not encrypt |
 | Entra ID connectivity | Required during provisioning for the Azure AD join, Intune enrollment, and key backup; devices provisioned offline must complete those steps manually afterward |
 | Signed provisioning package | Recommended for production use; unsigned packages may trigger a prompt or be blocked by policy |
-| Bootable USB drive | Built from the image project with Create > Clean install media. It is wiped and reformatted when built, so keep source files off the drive |
+| Bootable USB drive | Built from the image project with Create > Clean install media. It is wiped and reformatted when built, so copy the `.ppkg` onto it afterward and keep other source files elsewhere |
 
 ---
 
