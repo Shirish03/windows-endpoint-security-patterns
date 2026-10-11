@@ -195,7 +195,7 @@ feasible.
 | Requirement | Detail |
 |---|---|
 | **Windows ADK** | Windows Assessment and Deployment Kit with WICD component installed on the authoring machine |
-| **Target OS** | Windows 10 21H2 or later; Windows 11 |
+| **Target OS** | Windows 10 version 1607, the build this pattern was tested on. Later builds, including Windows 11, have not been validated against this flow |
 | **USB media** | Prepared Windows installation USB; provisioning package applied at OOBE |
 | **Entra ID** | Required for Entra ID join during setup; device must be able to reach Entra ID at enrollment time if joining |
 | **Authoring machine** | Any Windows 10/11 machine with ADK installed; does not need to be domain-joined |
@@ -375,10 +375,11 @@ a recoverable encryption state.
 ## Disclaimer
 
 This pattern is provided as reference material and design guidance. It
-has been validated in offline and infrastructure-light lab scenarios on
-Windows 10 22H2 and Windows 11. Provisioning package behavior may vary
-depending on Windows ADK version, hardware configuration, and target OS
-build.
+was built when Windows Autopilot was still in development and tested
+in offline and infrastructure-light lab scenarios on Windows 10
+version 1607. Behavior on later Windows builds has not been validated,
+and provisioning package behavior may vary depending on Windows ADK
+version, hardware configuration, and target OS build.
 
 Validate all provisioning packages in a controlled test environment
 before deploying to production devices.
