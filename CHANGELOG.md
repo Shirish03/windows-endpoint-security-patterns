@@ -7,14 +7,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Removed
-- Serverless Windows Provisioning pattern (formerly Pattern 03). It was built on
-  Windows 10 1607 tooling that Autopilot superseded
+### Added
+- Sysmon migration pattern (standalone to native Sysmon), with the gated migration
+  script, a flow diagram, and a whitepaper linked from the root README
+- Root README: a section on the technical reasoning behind each pattern
 
 ### Changed
-- Patterns renumbered to stay consecutive: SCEP via internal NDES is now 03, WEF
-  categorized collection 04, Sysmon migration 05. Earlier entries below use the
-  old numbers
+- Root README rewritten in a more personal voice
+- Default Sysmon config filename renamed from `sysmonconfig-export.xml` to
+  `config.xml`
+- Patterns renumbered to stay consecutive after a removal: SCEP via internal NDES
+  is 03, WEF categorized collection is 04, Sysmon migration is 05
+
+### Removed
+- Serverless Windows Provisioning pattern. It was built on Windows 10 1607 tooling
+  that Autopilot superseded
 
 ---
 
@@ -69,12 +76,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Windows explicitly identified as out of scope, as it uses ADCS
   auto-enrollment via Group Policy or SCCM; whitepaper markdown in repo
   renamed from v1.0 to v1.2
-- Pattern 04 README: title updated from "(Hybrid Entra ID)" to "(Entra ID
+- SCEP pattern README: title updated from "(Hybrid Entra ID)" to "(Entra ID
   Join Only)"; Environment Requirements device management row corrected to
   "Entra ID Join Only"; disclaimer updated to match corrected scope
 
 ### Added
-- Pattern 04 README: implementation note on SAN configuration and strong
+- SCEP pattern README: implementation note on SAN configuration and strong
   certificate mapping for Entra ID Join Only Windows devices and macOS —
   explains why `{{OnPremisesSecurityIdentifier}}` does not resolve without
   an on-premises AD computer object, references KB5014754 strong mapping
@@ -110,9 +117,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Em dashes replaced with appropriate punctuation across all documentation
 
 ### Added
-- Pattern 04: SCEP certificate enrollment via internal NDES
+- SCEP certificate enrollment via internal NDES
 - Simplified architecture diagrams for all patterns
-- ZTNA terminology corrected across Pattern 04 (broker-mediated session, not tunnel)
+- ZTNA terminology corrected across the SCEP pattern (broker-mediated session, not tunnel)
 
 ---
 
