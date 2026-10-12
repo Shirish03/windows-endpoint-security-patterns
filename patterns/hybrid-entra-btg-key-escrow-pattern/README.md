@@ -421,12 +421,6 @@ re-deployed as part of the build process.
 
 ---
 
-## Related Patterns
-
-- **[Serverless Windows Provisioning with WICD](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/serverless-windows-provisioning-wicd)**: enables BitLocker and triggers the initial recovery key escrow to Entra ID during OOBE provisioning. This pattern is the compensating control for the same escrow mechanism later in the device's life, when a user encrypts a removable drive with BitLocker-to-Go and that specific escrow path fails silently. Different lifecycle moment, same underlying platform behavior.
-
----
-
 ## Disclaimer
 
 This solution is provided as a reference implementation and design

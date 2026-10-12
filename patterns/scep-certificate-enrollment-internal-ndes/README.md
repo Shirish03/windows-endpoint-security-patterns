@@ -681,12 +681,6 @@ connectivity-related. Check:
 
 ---
 
-## Related Patterns
-
-- **[Serverless Windows Provisioning with WICD](https://github.com/Shirish03/windows-endpoint-security-patterns/blob/main/patterns/serverless-windows-provisioning-wicd)**: a device provisioned through that pattern completes Entra ID join during setup. When that join is Entra ID Join Only rather than Hybrid, which is a common outcome for offline or infrastructure-light provisioning, the resulting device is exactly the population this pattern's certificate enrollment addresses: no on-premises AD computer object, and no `{{OnPremisesSecurityIdentifier}}` to rely on.
-
----
-
 ## Disclaimer
 
 This solution is provided as a reference implementation and design
