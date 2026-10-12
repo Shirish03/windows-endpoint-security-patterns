@@ -17,7 +17,7 @@ The first pattern in this repo came from exactly that. BitLocker-to-Go recovery 
 
 The same kind of gap turns up from other directions. Controls built for Group Policy still have to coexist with Intune. Each pattern here documents one of these gaps and the approach I used to close it, without adding new infrastructure or weakening the platform's security model.
 
-Pattern 06 applies the same thinking to replacing a tool. It covers moving from standalone Sysmon to the version built into Windows 11, in a way that doesn't leave machines unmonitored without anyone noticing.
+[Pattern 06](patterns/sysmon-migration-standalone-to-native) applies the same thinking to replacing a tool. It covers moving from standalone Sysmon to the version built into Windows 11, in a way that doesn't leave machines unmonitored without anyone noticing.
 
 ## Who this is for
 
@@ -86,7 +86,7 @@ Two patterns step outside that list.
 
 Pattern 04 targets Entra ID Join Only Windows and macOS devices, which have no on-premises AD computer object. Its README covers the scope in detail.
 
-Pattern 06 needs Windows 11 24H2+ or Windows Server 2025 with the March 2026 cumulative update. It was validated and packaged for delivery through a general-purpose software deployment tool rather than Group Policy or Intune directly. See its README for scope.
+[Pattern 06](patterns/sysmon-migration-standalone-to-native) needs Windows 11 24H2+ or Windows Server 2025 with the March 2026 cumulative update. It was validated and packaged for delivery through a general-purpose software deployment tool rather than Group Policy or Intune directly. See its README for scope.
 
 
 These patterns may work in other setups, but I haven't validated them outside the environments above.
