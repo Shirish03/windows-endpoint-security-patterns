@@ -84,7 +84,7 @@ These patterns were developed and validated against:
 
 Two patterns step outside that list.
 
-Pattern 03 targets Entra ID Join Only Windows and macOS devices, which have no on-premises AD computer object. Its README covers the scope in detail.
+[Pattern 03](patterns/scep-certificate-enrollment-internal-ndes) targets Entra ID Join Only Windows and macOS devices, which have no on-premises AD computer object. Its README covers the scope in detail.
 
 [Pattern 05](patterns/sysmon-migration-standalone-to-native) needs Windows 11 24H2+ or Windows Server 2025 with the March 2026 cumulative update. It was validated and packaged for delivery through a general-purpose software deployment tool rather than Group Policy or Intune directly. See its README for scope.
 
