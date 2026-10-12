@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+- Serverless Windows Provisioning pattern (formerly Pattern 03). It was built on
+  Windows 10 1607 tooling that Autopilot superseded
+
+### Changed
+- Patterns renumbered to stay consecutive: SCEP via internal NDES is now 03, WEF
+  categorized collection 04, Sysmon migration 05. Earlier entries below use the
+  old numbers
+
 ---
 
 ## [0.7.0] - 2026-06-28

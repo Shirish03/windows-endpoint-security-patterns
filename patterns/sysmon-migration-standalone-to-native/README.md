@@ -41,7 +41,7 @@ The design responds to that directly: nothing destructive happens until every pr
 
 5. **Install native Sysmon** with the supplied config, then verify: the driver is running, the `Rules` registry value is present, and the registered `ConfigHash` matches the SHA-256 of the config that was supplied. Whether the `Sysmon` service is running and whether events reach the channel are logged as informational checks only, not failure conditions (see [Known limitations](#known-limitations-of-the-script)).
 
-![The gated migration sequence, with every exit code the script can produce at each step](docs/pattern-06-migration-flow-diagram.png)
+![The gated migration sequence, with every exit code the script can produce at each step](docs/pattern-05-migration-flow-diagram.png)
 
 If the gate doesn't pass, standalone is never touched. If a failure happens after standalone removal has already started, it's labeled a gap state in the log every time, not just when it happens to be the failure someone is watching for.
 
