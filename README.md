@@ -59,6 +59,7 @@ Some patterns have a longer whitepaper. You can read them here in the repo, or d
 | BitLocker-to-Go Recovery Key Escrow via Event-Driven Retry | [View](docs/whitepapers/btg-escrow-hybrid-entra-id-v1.4.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-btg-v1.4) |
 | SCEP Certificate Enrollment via Internal NDES | [View](docs/whitepapers/scep-zero-trust-certificate-infrastructure-v1.2.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-scep-v1.2) |
 | Migrating Standalone Sysmon to Native Windows Sysmon | [View](docs/whitepapers/sysmon-native-migration-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-sysmon-v1.0) |
+| Windows Event Forwarding: Categorized Collection | [View](docs/whitepapers/wef-categorized-collection-v1.0.md) | [Download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-wef-v1.0) |
 
 ## How I approach these
 
