@@ -12,6 +12,8 @@
 
 This document serves two audiences. Security architects and IT leadership will find the strategic context, the design reasoning, and the architectural recommendation in this section and the next. Engineers responsible for building and operating the collection tier should continue to [Implementation Reference](#implementation-reference) for the manifest, subscription, and Group Policy mechanics, and [Operational Guidance](#operational-guidance) for validation, failure handling, and change control.
 
+A shorter, decision-focused version of this pattern, written for architects and security leadership, is available as a [whitepaper](../../docs/whitepapers/wef-categorized-collection-v1.0.md), with a [PDF download](https://github.com/Shirish03/windows-endpoint-security-patterns/releases/tag/whitepaper-wef-v1.0).
+
 ### The Problem in Plain Terms
 
 Windows Event Forwarding (WEF) is the native mechanism for collecting security-relevant event logs from a fleet of Windows endpoints to one or more Windows Event Collector (WEC) servers, without installing a third-party agent on every device. The most common deployment follows the path of least resistance: a single collector, a single broad subscription, and all forwarded events landing in the built-in Forwarded Events log, which a downstream SIEM connector then reads and sorts out.
